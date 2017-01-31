@@ -1,0 +1,9 @@
+[common]
+database=climon.db.test
+port=8765
+sensor-interval=6
+
+[sensor:test]
+name=random
+type=random
+source=null

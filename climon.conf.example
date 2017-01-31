@@ -1,0 +1,18 @@
+[common]
+database=climon.db
+sensor-interval=600
+
+[sensor:living-room]
+name=Living room
+type=DHT11
+source=4
+
+[sensor:garden]
+name=Garden
+type=DHT22
+source=1
+
+[sensor:bathroom]
+name=Bathroom
+type=climon
+source=http://192.168.1.111:8765/sensor/bathroom

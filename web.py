@@ -1,23 +1,42 @@
 from flask import Flask
 from plot import plot2file
-import Adafruit_DHT
 import datetime
+import sensors
+import sys
+import conf
+import logging
+import database
 
 app = Flask(__name__)
+db = None
+config = None
 
-@app.route('/climon')
-def climon():
-    hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, 4)
+@app.route('/sensor/<sensor_id>')
+def climon(sensor_id):
+    hum, temp = sensors.get_by_id(config, sensor_id)()
     return '%f %f' % (temp, hum)
 
 @app.route('/')
 def index():
     today = datetime.datetime.combine(datetime.datetime.utcnow().date(), datetime.time())
     today_range = [today, today + datetime.timedelta(days=1)]
-    hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, 4)
-    plot2file("static/temps.png", today_range)
+    plot2file(config, db, 'static/temps.png', today_range)
 
-    return '<h3>Temperature %d˙C<br/>Humidity: %d%%<br/></h3><img src="/static/temps.png" />' % (temp, hum)
+    html = ''
+    for sensor_id, sensor in sensors.get_all(config).items():
+        hum, temp = sensors.get_from_conf(sensor)()
+        html += '<h3>%s: %.1f°C %.1f%%</h3>' % (sensor_id, hum, temp)
+    return html + '<img src="/static/temps.png" />'
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    conf_fname = sys.argv[1]
+    config = conf.read(conf_fname)
+    sensor_confs = sensors.get_all(config)
+
+    logging.basicConfig(filename='climon.log',
+            format='%(asctime)s %(levelname)s %(message)s',
+            level=logging.DEBUG)
+
+    db = database.Database(config['common']['database'])
+
+    app.run(debug=True, host='0.0.0.0', port=int(config['common']['port']))

@@ -1,31 +1,36 @@
-import Adafruit_DHT
 import datetime
 import time
 import sys
-import sqlite3
+import conf
+from datetime import datetime, timedelta
+from time import sleep
+import logging
+import sensors
+import database
 
-def averageHumTemp(seconds, samples):
-    hums, temps = [], []
-    for _ in range(samples):
-        print('Reading', _)
-        hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, 4)
-        hums.append(hum)
-        temps.append(temp)
-        print('Sleeping', float(seconds)/samples)
-        time.sleep(float(seconds)/samples)
-    return sum(hums)/len(hums), sum(temps)/len(temps)
+def sleep_since(since, seconds):
+    while since + timedelta(seconds=seconds) > datetime.utcnow():
+        sleep(.5)
 
 if __name__ == '__main__':
-    db = sys.argv[1]
+    conf_fname = sys.argv[1]
+    config = conf.read(conf_fname)
+    sensor_confs = sensors.get_all(config)
+
+    logging.basicConfig(filename='climon.log',
+            format='%(asctime)s %(levelname)s %(message)s',
+            level=logging.DEBUG)
+
+    db = database.Database(config['common']['database'])
 
     while True:
-        timestamp = datetime.datetime.utcnow()
-        #hum, temp = averageHumTemp(10*6, 10)
-        hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, 4)
-        if hum is not None and temp is not None:
-            conn = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
-            print('Writing', timestamp, temp, hum)
-            conn.execute("INSERT INTO climon VALUES (?, ?, ?)", (timestamp, temp, hum))
-            conn.commit()
-            conn.close()
-            time.sleep(9*60)
+        timestamp = datetime.utcnow()
+
+        for sensor_id, sensor in sensor_confs.items():
+            logging.debug('Reading sensor %s', sensor_id)
+            hum, temp = sensors.get_from_conf(sensor)()
+            logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
+            db.set(sensor_id, timestamp, temp, hum)
+
+        logging.debug('Starting to sleep')
+        sleep_since(timestamp, int(config['common']['sensor-interval']))
