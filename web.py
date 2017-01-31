@@ -13,7 +13,7 @@ config = None
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    hum, temp = sensors.get_by_id(config, sensor_id)()
+    temp, hum = sensors.get_by_id(config, sensor_id)()
     return '%f %f' % (temp, hum)
 
 @app.route('/')
@@ -24,7 +24,7 @@ def index():
 
     html = ''
     for sensor_id, sensor in sensors.get_all(config).items():
-        hum, temp = sensors.get_from_conf(sensor)()
+        temp, hum = sensors.get_from_conf(sensor)()
         html += '<h3>%s: %.1f°C %.1f%%</h3>' % (sensor_id, hum, temp)
     return html + '<img src="/static/temps.png" />'
 
@@ -39,4 +39,4 @@ if __name__ == '__main__':
 
     db = database.Database(config['common']['database'])
 
-    app.run(debug=True, host='0.0.0.0', port=int(config['common']['port']))
+    app.run(debug=True, host='0.0.0.0', threaded=True, port=int(config['common']['port']))

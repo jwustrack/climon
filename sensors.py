@@ -10,7 +10,7 @@ def sensor_dht22(source):
 
 def sensor_climon(source):
     from urllib import request
-    return map(float, request.urlopen(source).read().split(' '))
+    return map(float, request.urlopen(source).read().split())
 
 def sensor_random(source):
     import random
@@ -27,7 +27,7 @@ def get_from_conf(sensor_conf):
     return partial(SENSORS[sensor_conf['type'].upper()], sensor_conf['source'])
 
 def get_by_id(conf, sensor_id):
-    return get_all(conf)[sensor_id]['getter']
+    return get_from_conf(get_all(conf)[sensor_id])
 
 def get_all(conf):
     sensors = {}
