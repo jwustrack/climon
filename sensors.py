@@ -1,3 +1,15 @@
+'''
+Accessors for the sensors defined in the configuration
+
+>>> import conf
+>>> c = conf.read('climon.conf.test')
+>>> list(iter_ids(c))
+['test']
+>>> get_by_id(c, 'test') # doctest: +ELLIPSIS
+functools.partial(<function sensor_random at ...>, 'null')
+'''
+
+
 from functools import partial
 
 def sensor_dht11(source):
@@ -23,17 +35,17 @@ SENSORS = {
     'RANDOM': sensor_random,
         }
 
-def get_from_conf(sensor_conf):
-    return partial(SENSORS[sensor_conf['type'].upper()], sensor_conf['source'])
-
 def get_by_id(conf, sensor_id):
-    return get_all(conf)[sensor_id]['getter']
+    sensor_conf = conf['sensor:%s' % sensor_id]
+    sensor = SENSORS[sensor_conf['type'].upper()]
+    return partial(sensor, sensor_conf['source'])
 
-def get_all(conf):
-    sensors = {}
+def iter_ids(conf):
     for section in conf.sections():
         if section.startswith('sensor:'):
-            section_conf = conf[section]
             _, sensor_id = section.split(':', 1)
-            sensors[sensor_id] = section_conf
-    return sensors
+            yield sensor_id
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

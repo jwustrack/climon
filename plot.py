@@ -5,14 +5,15 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy
 import sensors
+import logging
 
-def plot_day(sensor, db, ax, hum_ax, d_range, yesterday=False):
+def plot_day(sensor_id, db, ax, hum_ax, d_range, yesterday=False):
     times = []
     temps = []
     hums = []
     start_d = None
     
-    for row in db.get(sensor, d_range[0], d_range[1]):
+    for row in db.get(sensor_id, d_range[0], d_range[1]):
         timestamp, temp, hum = row
         temps.append(temp)
         if yesterday:
@@ -50,7 +51,7 @@ def plot2file(config, db, out_fname, d_range):
     days = [ min_date + datetime.timedelta(days=d) for d in range(n_days) ]
 
 
-    for sensor_id, sensor in sensors.get_all(config).items():
+    for sensor_id in sensors.iter_ids(config):
         plot_day(sensor_id, db, ax, hum_ax, d_range)
         plot_day(sensor_id, db, ax, hum_ax, (d_range[0] - datetime.timedelta(days=1), d_range[1] - datetime.timedelta(days=1)), yesterday=True)
 
@@ -71,4 +72,6 @@ def plot2file(config, db, out_fname, d_range):
         hum_ax2.plot(days, avg_hums)
         hum_ax2.fill_between(days, min_hums, max_hums, alpha=0.1, label='humidity range')
 
+    logging.debug('Writing graph')
     fig.savefig(out_fname)
+    logging.debug('Writing graph done')

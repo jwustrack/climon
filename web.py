@@ -1,42 +1,48 @@
-from flask import Flask
+import flask
 from plot import plot2file
 import datetime
 import sensors
 import sys
-import conf
+from conf import read as read_conf
 import logging
 import database
 
-app = Flask(__name__)
-db = None
-config = None
+app = flask.Flask(__name__)
+conf = None
+
+def db():
+    db = getattr(flask.g, 'db', None)
+    if db is None:
+        logging.info('Connecting to DB.')
+        flask.g.db = database.Database(conf['common']['database'])
+    return flask.g.db
+
+@app.teardown_appcontext
+def close_db(error):
+    logging.info('Closing DB.')
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    hum, temp = sensors.get_by_id(config, sensor_id)()
+    hum, temp = sensors.get_by_id(conf, sensor_id)()
     return '%f %f' % (temp, hum)
 
 @app.route('/')
 def index():
     today = datetime.datetime.combine(datetime.datetime.utcnow().date(), datetime.time())
     today_range = [today, today + datetime.timedelta(days=1)]
-    plot2file(config, db, 'static/temps.png', today_range)
+    plot2file(conf, db(), 'static/temps.png', today_range)
 
     html = ''
-    for sensor_id, sensor in sensors.get_all(config).items():
-        hum, temp = sensors.get_from_conf(sensor)()
+    for sensor_id in sensors.iter_ids(conf):
+        hum, temp = sensors.get_by_id(conf, sensor_id)()
         html += '<h3>%s: %.1f°C %.1f%%</h3>' % (sensor_id, hum, temp)
     return html + '<img src="/static/temps.png" />'
 
 if __name__ == '__main__':
-    conf_fname = sys.argv[1]
-    config = conf.read(conf_fname)
-    sensor_confs = sensors.get_all(config)
+    conf = read_conf(sys.argv[1])
 
     logging.basicConfig(filename='climon.log',
             format='%(asctime)s %(levelname)s %(message)s',
             level=logging.DEBUG)
 
-    db = database.Database(config['common']['database'])
-
-    app.run(debug=True, host='0.0.0.0', port=int(config['common']['port']))
+    app.run(debug=True, host='0.0.0.0', port=int(conf['common']['port']))
