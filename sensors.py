@@ -22,7 +22,7 @@ def sensor_dht22(source):
 
 def sensor_climon(source):
     from urllib import request
-    return map(float, request.urlopen(source).read().split(' '))
+    return map(float, request.urlopen(source).read().split())
 
 def sensor_random(source):
     import random
