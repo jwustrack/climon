@@ -17,6 +17,12 @@ Database access module abstracting getters and setters.
 >>> list(db.get('sensor2', d1, d3))
 []
 
+>>> db.getLatest('sensor1') # doctest: +ELLIPSIS
+(datetime.datetime(...), 22.0, 50.5)
+>>> db.getLatest('sensor2') # doctest: +ELLIPSIS
+(datetime.datetime(...), 30.0, 10.0)
+
+
 >>> db.getDayStats('sensor1', datetime.datetime.utcnow().date())
 (20.0, 22.0, 21.0, 45.5, 50.5, 48.0)
 >>> db.getDayStats('sensor2', datetime.datetime.utcnow().date())
@@ -61,6 +67,10 @@ class Database(object):
 
         for row in cursor.fetchall():
             yield row
+
+    def getLatest(self, sensor):
+        cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? ORDER BY time desc LIMIT 1', (sensor,))
+        return cursor.fetchone()
 
     def getDateSpan(self):
         cursor = self.db.execute('SELECT min(time) as "min_t [timestamp]", max(time) as "max_t [timestamp]" FROM climon')

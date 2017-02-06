@@ -7,13 +7,24 @@ import numpy
 import sensors
 import logging
 
+plt.close('all')
+fig, ((ax, ax2), (hum_ax, hum_ax2)) = plt.subplots(2, 2, sharex='col', sharey='row')#, figsize=(16, 8))
+
+ax.set_ylabel('temperature')
+hum_ax.set_ylabel('humidity')
+ax.grid(which='both', axis='y')
+hum_ax.grid(which='both', axis='y')
+
+# rotate and align the tick labels so they look better
+fig.autofmt_xdate()
+
 def plot_day(config, sensor_id, db, ax, hum_ax, d_range, yesterday=False):
     times = []
     temps = []
     hums = []
     start_d = None
     color = config['sensor:%s' % sensor_id]['color']
-    
+
     for row in db.get(sensor_id, d_range[0], d_range[1]):
         timestamp, temp, hum = row
         temps.append(temp)
@@ -23,27 +34,12 @@ def plot_day(config, sensor_id, db, ax, hum_ax, d_range, yesterday=False):
         hums.append(hum)
 
     if temps and hums:
-        N=30 # 6 * 10 min
-        #temps = numpy.convolve(numpy.array(temps, dtype=float), numpy.ones((N,))/N, mode='valid')
-        #hums = numpy.convolve(numpy.array(hums, dtype=float), numpy.ones((N,))/N, mode='valid')
-        #ax.plot(times[:1-N], temps)
-        #ax.plot(times[:1-N], hums)
         style = '-' if not yesterday else ':'
         ax.plot(times, temps, style, label='temperature', color=color)
         hum_ax.plot(times, hums, style, label='humidity', color=color)
 
 def plot2file(config, db, out_fname, d_range):
-    plt.close('all')
-    fig, (ax, hum_ax) = plt.subplots(nrows=2)
-    fig, ((ax, ax2), (hum_ax, hum_ax2)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(16, 8))
-
-    ax.set_ylabel('temperature')
-    hum_ax.set_ylabel('humidity')
-    ax.grid(which='both', axis='y')
-    hum_ax.grid(which='both', axis='y')
-
-    # rotate and align the tick labels so they look better
-    fig.autofmt_xdate()
+    logging.debug('Starting to plot')
 
     min_date, max_date = db.getDateSpan()
     min_date, max_date = min_date.date(), max_date.date()
@@ -77,3 +73,27 @@ def plot2file(config, db, out_fname, d_range):
     logging.debug('Writing graph')
     fig.savefig(out_fname)
     logging.debug('Writing graph done')
+
+
+if __name__ == '__main__':
+    from conf import read as read_conf
+    import database
+
+    conf = read_conf(sys.argv[1])
+
+    logging.basicConfig(filename='climon.log',
+            format='%(asctime)s %(levelname)s web.py %(message)s',
+            level=logging.DEBUG)
+
+    db = database.Database(conf['common']['database'])
+    today = datetime.datetime.combine(datetime.datetime.utcnow().date(), datetime.time())
+    today_range = [today, today + datetime.timedelta(days=1)]
+
+    import cProfile
+    pr = cProfile.Profile()
+    pr.enable()
+
+    plot2file(conf, db, 'static/temps.png', today_range)
+
+    pr.disable()
+    pr.dump_stats('plot.perf')

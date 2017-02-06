@@ -9,6 +9,11 @@ import sensors
 import database
 
 def sleep_since(since, seconds):
+    '''
+    Sleep until the given number of seconds has elapsed since the given start time.
+    In other words, this is equivalent to:
+    sleep(seconds - (now - since))
+    '''
     while since + timedelta(seconds=seconds) > datetime.utcnow():
         sleep(.5)
 
@@ -17,7 +22,7 @@ if __name__ == '__main__':
     conf = read_conf(conf_fname)
 
     logging.basicConfig(filename='climon.log',
-            format='%(asctime)s %(levelname)s %(message)s',
+            format='%(asctime)s %(levelname)s MON %(message)s',
             level=logging.DEBUG)
 
     db = database.Database(conf['common']['database'])
