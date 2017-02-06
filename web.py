@@ -35,7 +35,8 @@ def index():
     html = ''
     for sensor_id in sensors.iter_ids(conf):
         temp, hum = sensors.get_by_id(conf, sensor_id)()
-        html += '<h3>%s: %.1f°C %.1f%%</h3>' % (sensor_id, hum, temp)
+        color = conf['sensor:%s' % sensor_id]['color']
+        html += '<h3 style="font-family: sans-serif;color: %s">%s: %.1f°C %.1f%%</h3>' % (color, sensor_id, hum, temp)
     return html + '<img src="/static/temps.png" />'
 
 if __name__ == '__main__':

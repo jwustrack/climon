@@ -26,10 +26,13 @@ if __name__ == '__main__':
         timestamp = datetime.utcnow()
 
         for sensor_id in sensors.iter_ids(conf):
-            logging.debug('Reading sensor %s', sensor_id)
-            hum, temp = sensors.get_by_id(conf, sensor_id)()
-            logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
-            db.set(sensor_id, timestamp, temp, hum)
+            try:
+                logging.debug('Reading sensor %s', sensor_id)
+                hum, temp = sensors.get_by_id(conf, sensor_id)()
+                logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
+                db.set(sensor_id, timestamp, temp, hum)
+            except Exception as e:
+                logging.exception('Error while reading sensor')
 
         logging.debug('Starting to sleep')
         sleep_since(timestamp, int(conf['common']['sensor-interval']))

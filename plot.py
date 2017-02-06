@@ -7,11 +7,12 @@ import numpy
 import sensors
 import logging
 
-def plot_day(sensor_id, db, ax, hum_ax, d_range, yesterday=False):
+def plot_day(config, sensor_id, db, ax, hum_ax, d_range, yesterday=False):
     times = []
     temps = []
     hums = []
     start_d = None
+    color = config['sensor:%s' % sensor_id]['color']
     
     for row in db.get(sensor_id, d_range[0], d_range[1]):
         timestamp, temp, hum = row
@@ -22,15 +23,14 @@ def plot_day(sensor_id, db, ax, hum_ax, d_range, yesterday=False):
         hums.append(hum)
 
     if temps and hums:
-        #N=6 # 6 * 10 min
-        #temps = numpy.convolve(numpy.array(temps, dtype=float), numpy.ones((N,))/N, mode='same')
-        #hums = numpy.convolve(numpy.array(hums, dtype=float), numpy.ones((N,))/N, mode='same')
+        N=30 # 6 * 10 min
+        #temps = numpy.convolve(numpy.array(temps, dtype=float), numpy.ones((N,))/N, mode='valid')
+        #hums = numpy.convolve(numpy.array(hums, dtype=float), numpy.ones((N,))/N, mode='valid')
         #ax.plot(times[:1-N], temps)
         #ax.plot(times[:1-N], hums)
-        style = 'b-' if not yesterday else 'b:'
-        ax.plot(times, temps, style, label='temperature')
-
-        hum_ax.plot(times, hums, style, label='humidity')
+        style = '-' if not yesterday else ':'
+        ax.plot(times, temps, style, label='temperature', color=color)
+        hum_ax.plot(times, hums, style, label='humidity', color=color)
 
 def plot2file(config, db, out_fname, d_range):
     plt.close('all')
@@ -52,8 +52,10 @@ def plot2file(config, db, out_fname, d_range):
 
 
     for sensor_id in sensors.iter_ids(config):
-        plot_day(sensor_id, db, ax, hum_ax, d_range)
-        plot_day(sensor_id, db, ax, hum_ax, (d_range[0] - datetime.timedelta(days=1), d_range[1] - datetime.timedelta(days=1)), yesterday=True)
+        color = config['sensor:%s' % sensor_id]['color']
+
+        plot_day(config, sensor_id, db, ax, hum_ax, d_range)
+        plot_day(config, sensor_id, db, ax, hum_ax, (d_range[0] - datetime.timedelta(days=1), d_range[1] - datetime.timedelta(days=1)), yesterday=True)
 
         min_temps, max_temps, avg_temps = [], [], []
         min_hums, max_hums, avg_hums = [], [], []
@@ -66,11 +68,11 @@ def plot2file(config, db, out_fname, d_range):
             max_hums.append(max_hum)
             avg_hums.append(avg_hum)
 
-        ax2.plot(days, avg_temps)
-        ax2.fill_between(days, min_temps, max_temps, alpha=0.1, label='temperature range')
+        ax2.plot(days, avg_temps, color=color)
+        ax2.fill_between(days, min_temps, max_temps, alpha=0.1, label='temperature range', color=color)
 
-        hum_ax2.plot(days, avg_hums)
-        hum_ax2.fill_between(days, min_hums, max_hums, alpha=0.1, label='humidity range')
+        hum_ax2.plot(days, avg_hums, color=color)
+        hum_ax2.fill_between(days, min_hums, max_hums, alpha=0.1, label='humidity range', color=color)
 
     logging.debug('Writing graph')
     fig.savefig(out_fname)
