@@ -1,8 +1,11 @@
 import flask
+from flask import render_template
 from plot import plot2file
 import datetime
-import sensors
+import json
 import sys
+
+import sensors
 from conf import read as read_conf
 import logging
 import database
@@ -47,6 +50,46 @@ def close_db(error):
 def climon(sensor_id):
     temp, hum = sensors.get_by_id(config, sensor_id)()
     return '%f %f' % (temp, hum)
+
+@app.route('/data/<yyyymmdd>')
+def data(yyyymmdd, sensor_id):
+    day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
+
+    sensor_data = {}
+    for sensor_id in sensors.iter_ids(conf):
+        timestamp_strs = []
+        temperatures = []
+        humidities = []
+        for timestamp, temperature, humidity in db().get(sensor_id, day, day + datetime.timedelta(days=1)):
+            timestamp_strs.append(timestamp.strftime('%Y%m%dT%H%M%S'))
+            temperatures.append(temperature)
+            humidities.append(humidity)
+        sensor_data[sensor_id]['timestamps'] = timestamp_strs
+        sensor_data[sensor_id]['temperatures'] = temperatures
+        sensor_data[sensor_id]['humidities'] = humidities
+    return json.dumps(sensor_data)
+
+@app.route('/data/graph/<yyyymmdd>')
+def gdata(yyyymmdd):
+    day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
+    sensor_data = {}
+    for sensor_id in sensors.iter_ids(conf):
+        data = list(db().get(sensor_id, day, day + datetime.timedelta(days=1)))[::20]
+        sensor_data[sensor_id] = {}
+        sensor_data[sensor_id]['temperatures'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=temperature) for timestamp, temperature, humidity in data]
+        sensor_data[sensor_id]['humidities'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=humidity) for timestamp, temperature, humidity in data]
+    return json.dumps(sensor_data)
+
+@app.route('/jsgraph/<range>/<date>')
+def jsgraph(range, date):
+    assert range in ('day', 'week', 'month', 'year')
+    return render_template('index.html', range='day', date=date)
+
+@app.route('/jsgraph/<range>')
+def jsgraph_today(range):
+    assert range in ('day', 'week', 'month', 'year')
+    timestamp = datetime.datetime.now()
+    return render_template('index.html', range='day', date=timestamp.strftime('%Y%m%d'))
 
 @app.route('/')
 def index():

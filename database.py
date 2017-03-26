@@ -63,7 +63,7 @@ class Database(object):
         self.db.commit()
 
     def get(self, sensor, time_from, time_to):
-        cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? AND time >= ? AND time < ?', (sensor, time_from, time_to))
+        cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, time_from, time_to))
 
         for row in cursor.fetchall():
             yield row

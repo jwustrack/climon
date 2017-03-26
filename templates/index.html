@@ -1,0 +1,85 @@
+<html>
+<head>
+<script src="/static/jquery-3.2.0.js"></script>
+<script src="/static/Chart.bundle.js"></script>
+</head>
+<body>
+<h1>climon</h1>
+<h2>Temperature</h2>
+<div style="height: 200px;">
+<canvas id="tempChart" style="height: 200px"></canvas>
+</div>
+<h2>Humidity</h2>
+<div style="height: 200px;">
+<canvas id="humChart" style="height: 200px"></canvas>
+</div>
+<p>end of page</p>
+</body>
+<script>
+$.getJSON( "/data/graph/{{date}}", function( data ) {
+var ctx = document.getElementById("tempChart");
+colors = {
+    'living-room-remote': "rgba(75,192,192,1)",
+    'living-room-22': "rgba(192,75,192,1)",
+    'living-room-22bis': "rgba(192,192,75,1)",
+}
+datasets = []
+for (var key in data)
+{
+    datasets.push(
+        {
+            label: key,
+            data: data[key]['temperatures'],
+            backgroundColor: "rgba(0,0,0,0)",
+            borderColor: colors[key],
+        }
+    )
+}
+var scatterChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        datasets: datasets
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                type: 'time',
+                position: 'bottom'
+            }]
+        },
+	responsive: true,
+	maintainAspectRatio: false
+    }
+});
+datasets = []
+for (var key in data)
+{
+    datasets.push(
+        {
+            label: key,
+            data: data[key]['humidities'],
+            backgroundColor: "rgba(0,0,0,0)",
+            borderColor: colors[key],
+        }
+    )
+}
+var ctx = document.getElementById("humChart");
+var scatterChart2 = new Chart(ctx, {
+    type: 'line',
+    data: {
+        datasets: datasets
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                type: 'time',
+                position: 'bottom'
+            }]
+        },
+	responsive: true,
+	maintainAspectRatio: false
+    }
+});
+});
+</script>
+</html>

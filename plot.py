@@ -7,17 +7,6 @@ import numpy
 import sensors
 import logging
 
-plt.close('all')
-fig, ((ax, ax2), (hum_ax, hum_ax2)) = plt.subplots(2, 2, sharex='col', sharey='row')#, figsize=(16, 8))
-
-ax.set_ylabel('temperature')
-hum_ax.set_ylabel('humidity')
-ax.grid(which='both', axis='y')
-hum_ax.grid(which='both', axis='y')
-
-# rotate and align the tick labels so they look better
-fig.autofmt_xdate()
-
 def plot_day(config, sensor_id, db, ax, hum_ax, d_range, yesterday=False):
     times = []
     temps = []
@@ -40,6 +29,17 @@ def plot_day(config, sensor_id, db, ax, hum_ax, d_range, yesterday=False):
 
 def plot2file(config, db, out_fname, d_range):
     logging.debug('Starting to plot')
+
+    plt.close('all')
+    fig, ((ax, ax2), (hum_ax, hum_ax2)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(24, 8))
+    
+    ax.set_ylabel('temperature')
+    hum_ax.set_ylabel('humidity')
+    ax.grid(which='both', axis='y')
+    hum_ax.grid(which='both', axis='y')
+    
+    # rotate and align the tick labels so they look better
+    fig.autofmt_xdate()
 
     min_date, max_date = db.getDateSpan()
     min_date, max_date = min_date.date(), max_date.date()
