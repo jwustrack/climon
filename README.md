@@ -1,5 +1,7 @@
 # climon
 
+Monitors DHT11 and DHT22 sensors connected to a Raspberry Pi and renders graphs of their historical values.
+
 ## Configuration
 
 It's probably pretty self-explanatory:
