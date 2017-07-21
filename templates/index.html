@@ -16,7 +16,7 @@
 <p>end of page</p>
 </body>
 <script>
-$.getJSON( "/data/graph/{{date}}", function( data ) {
+$.getJSON( "/data/graph/{{range}}/{{date}}", function( data ) {
 var ctx = document.getElementById("tempChart");
 colors = {
     'living-room-remote': "rgba(75,192,192,1)",

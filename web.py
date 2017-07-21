@@ -48,28 +48,32 @@ def close_db(error):
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    temp, hum = sensors.get_by_id(config, sensor_id)()
+    temp, hum = sensors.get_by_id(conf, sensor_id)()
     return '%f %f' % (temp, hum)
 
-@app.route('/data/<yyyymmdd>')
-def data(yyyymmdd, sensor_id):
-    day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
-
+@app.route('/data/graph/all/<date>')
+def galldata(date):
     sensor_data = {}
     for sensor_id in sensors.iter_ids(conf):
-        timestamp_strs = []
-        temperatures = []
-        humidities = []
-        for timestamp, temperature, humidity in db().get(sensor_id, day, day + datetime.timedelta(days=1)):
-            timestamp_strs.append(timestamp.strftime('%Y%m%dT%H%M%S'))
-            temperatures.append(temperature)
-            humidities.append(humidity)
-        sensor_data[sensor_id]['timestamps'] = timestamp_strs
-        sensor_data[sensor_id]['temperatures'] = temperatures
-        sensor_data[sensor_id]['humidities'] = humidities
+        from collections import defaultdict
+        sensor_data[sensor_id] = defaultdict(lambda: [])
+        for d, min_temp, max_temp, avg_temp, min_hum, max_hum, avg_hum in db().getDailyStats(sensor_id):
+            sensor_data[sensor_id]['temperatures'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_temp))
+            sensor_data[sensor_id]['humidities'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_hum))
     return json.dumps(sensor_data)
 
-@app.route('/data/graph/<yyyymmdd>')
+@app.route('/data/graph/week/<yyyymmdd>')
+def gwdata(yyyymmdd):
+    day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
+    sensor_data = {}
+    for sensor_id in sensors.iter_ids(conf):
+        data = list(db().get(sensor_id, day - datetime.timedelta(days=6), day + datetime.timedelta(days=1)))[::20]
+        sensor_data[sensor_id] = {}
+        sensor_data[sensor_id]['temperatures'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=temperature) for timestamp, temperature, humidity in data]
+        sensor_data[sensor_id]['humidities'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=humidity) for timestamp, temperature, humidity in data]
+    return json.dumps(sensor_data)
+
+@app.route('/data/graph/day/<yyyymmdd>')
 def gdata(yyyymmdd):
     day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
     sensor_data = {}
@@ -87,9 +91,9 @@ def jsgraph(range, date):
 
 @app.route('/jsgraph/<range>')
 def jsgraph_today(range):
-    assert range in ('day', 'week', 'month', 'year')
+    assert range in ('day', 'week', 'month', 'year', 'all')
     timestamp = datetime.datetime.now()
-    return render_template('index.html', range='day', date=timestamp.strftime('%Y%m%d'))
+    return render_template('index.html', range=range, date=timestamp.strftime('%Y%m%d'))
 
 @app.route('/')
 def index():

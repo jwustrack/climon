@@ -63,6 +63,7 @@ class Database(object):
         self.db.commit()
 
     def get(self, sensor, time_from, time_to):
+        logging.debug('Getting data for sensor %r from %r to %r' % (sensor, time_from, time_to))
         cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, time_from, time_to))
 
         for row in cursor.fetchall():
@@ -75,6 +76,11 @@ class Database(object):
     def getDateSpan(self):
         cursor = self.db.execute('SELECT min(time) as "min_t [timestamp]", max(time) as "max_t [timestamp]" FROM climon')
         return cursor.fetchone()
+
+    def getDailyStats(self, sensor):
+        cursor = self.db.execute('SELECT date, temp_min, temp_max, temp_avg, hum_min, hum_max, hum_avg FROM climon_daily WHERE sensor = ?', (sensor,))
+        for row in cursor.fetchall():
+            yield row
 
     def getDayStats(self, sensor, day):
         cursor = self.db.execute('SELECT min(temperature), max(temperature), avg(temperature), min(humidity), max(humidity), avg(humidity) FROM climon WHERE sensor = ? AND time >= ? AND time < ?', (sensor, day, day + datetime.timedelta(days=1)))
