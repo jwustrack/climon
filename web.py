@@ -3,7 +3,6 @@ from flask import render_template
 from plot import plot2file
 import datetime
 import json
-import sys
 
 import sensors
 from conf import read as read_conf
@@ -108,11 +107,32 @@ def index():
         html += '<p style="font-family: sans-serif;color: %s">%s: %.1f°C %.1f%% (%s)</p>' % (color, sensor_id, hum, temp, prettyDate(timestamp))
     return html + '<img src="/static/temps.png" />'
 
-if __name__ == '__main__':
-    conf = read_conf(sys.argv[1])
+def main(conf_fname):
+    global conf
 
     logging.basicConfig(filename='climon.log',
             format='%(asctime)s %(levelname)s WEB %(message)s',
             level=logging.DEBUG)
 
-    app.run(debug=True, host='0.0.0.0', threaded=True, port=int(conf['common']['port']))
+    logging.info('Reading conf')
+    conf = read_conf(conf_fname)
+    logging.info('Reading conf done')
+    app.run(debug=False, host='0.0.0.0', threaded=True, port=int(conf['common']['port']))
+
+if __name__ == '__main__':
+    import daemon
+    import sys
+    
+    class Daemon(daemon.Daemon):
+    
+        def run(self):
+            main('climon.conf')
+    
+    daemon = Daemon(pidfile='web.pid')
+    
+    if 'start' == sys.argv[1]: 
+        daemon.start()
+    elif 'stop' == sys.argv[1]: 
+        daemon.stop()
+    elif 'restart' == sys.argv[1]: 
+        daemon.restart()

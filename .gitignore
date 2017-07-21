@@ -1,3 +1,8 @@
+climon.conf
+climon.db
+mon.pid
+web.pid
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
