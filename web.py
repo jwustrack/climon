@@ -66,7 +66,7 @@ def gwdata(yyyymmdd):
     day = datetime.datetime.strptime(yyyymmdd, '%Y%m%d')
     sensor_data = {}
     for sensor_id in sensors.iter_ids(conf):
-        data = list(db().get(sensor_id, day - datetime.timedelta(days=6), day + datetime.timedelta(days=1)))[::20]
+        data = list(db().get(sensor_id, day - datetime.timedelta(days=6), day + datetime.timedelta(days=1)))[::140]
         sensor_data[sensor_id] = {}
         sensor_data[sensor_id]['temperatures'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=temperature) for timestamp, temperature, humidity in data]
         sensor_data[sensor_id]['humidities'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=humidity) for timestamp, temperature, humidity in data]
@@ -83,12 +83,12 @@ def gdata(yyyymmdd):
         sensor_data[sensor_id]['humidities'] = [dict(x=timestamp.strftime('%Y%m%dT%H%M%S'), y=humidity) for timestamp, temperature, humidity in data]
     return json.dumps(sensor_data)
 
-@app.route('/jsgraph/<range>/<date>')
+@app.route('/<range>/<date>')
 def jsgraph(range, date):
     assert range in ('day', 'week', 'month', 'year')
     return render_template('index.html', range='day', date=date)
 
-@app.route('/jsgraph/<range>')
+@app.route('/<range>')
 def jsgraph_today(range):
     assert range in ('day', 'week', 'month', 'year', 'all')
     timestamp = datetime.datetime.now()
@@ -96,16 +96,7 @@ def jsgraph_today(range):
 
 @app.route('/')
 def index():
-    today = datetime.datetime.combine(datetime.datetime.utcnow().date(), datetime.time())
-    today_range = [today, today + datetime.timedelta(days=1)]
-    plot2file(conf, db(), 'static/temps.png', today_range)
-
-    html = ''
-    for sensor_id in sensors.iter_ids(conf):
-        timestamp, temp, hum = db().getLatest(sensor_id)
-        color = conf['sensor:%s' % sensor_id]['color']
-        html += '<p style="font-family: sans-serif;color: %s">%s: %.1f°C %.1f%% (%s)</p>' % (color, sensor_id, hum, temp, prettyDate(timestamp))
-    return html + '<img src="/static/temps.png" />'
+    return jsgraph_today('day')
 
 def main(conf_fname):
     global conf

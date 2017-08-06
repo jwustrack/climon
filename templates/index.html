@@ -1,44 +1,77 @@
 <html>
 <head>
-<script src="/static/jquery-3.2.0.js"></script>
-<script src="/static/Chart.bundle.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body>
-<h1>climon</h1>
-<h2>Temperature</h2>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
+<script src="/static/Chart.bundle.js"></script>
+
+<div class="container">
+<header>
+<h4>climon</h4>
+<div class="row">
+<div class="col s12">
+<ul class="tabs">
+	<li class="tab col s4"><a href="#day">Day</a></li>
+	<li class="tab col s4"><a href="#week">Week</a></li>
+	<li class="tab col s4"><a href="#all">All</a></li>
+</ul>
+</div>
+</div>
+</header>
+<div id="day" class="col s12">
+</div>
+<div id="week" class="col s12">
+</div>
+<div id="all" class="col s12">
+</div>
+<main>
+<div class="card-panel">
+<h5>Temperature</h5>
 <div style="height: 200px;">
 <canvas id="tempChart" style="height: 200px"></canvas>
 </div>
-<h2>Humidity</h2>
+</div>
+<div class="card-panel">
+<h5>Humidity</h5>
 <div style="height: 200px;">
 <canvas id="humChart" style="height: 200px"></canvas>
 </div>
-<p>end of page</p>
-</body>
+</div>
 <script>
-$.getJSON( "/data/graph/{{range}}/{{date}}", function( data ) {
-var ctx = document.getElementById("tempChart");
 colors = {
     'living-room-remote': "rgba(75,192,192,1)",
     'living-room-22': "rgba(192,75,192,1)",
     'living-room-22bis': "rgba(192,192,75,1)",
-}
-datasets = []
-for (var key in data)
+};
+humData=[];
+tempData=[];
+for (var key in colors)
 {
-    datasets.push(
+    tempData.push(
         {
             label: key,
-            data: data[key]['temperatures'],
+            data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
         }
-    )
+    );
+    humData.push(
+        {
+            label: key,
+	    data: [],
+            backgroundColor: "rgba(0,0,0,0)",
+            borderColor: colors[key],
+        }
+    );
 }
-var scatterChart = new Chart(ctx, {
+var ctx = $("#tempChart");
+window.myTempChart = new Chart(ctx, {
     type: 'line',
     data: {
-        datasets: datasets
+        datasets: tempData
     },
     options: {
         scales: {
@@ -48,26 +81,15 @@ var scatterChart = new Chart(ctx, {
             }]
         },
 	responsive: true,
-	maintainAspectRatio: false
+	maintainAspectRatio: false,
+	animation: false
     }
 });
-datasets = []
-for (var key in data)
-{
-    datasets.push(
-        {
-            label: key,
-            data: data[key]['humidities'],
-            backgroundColor: "rgba(0,0,0,0)",
-            borderColor: colors[key],
-        }
-    )
-}
-var ctx = document.getElementById("humChart");
-var scatterChart2 = new Chart(ctx, {
+var ctx = $("#humChart");
+window.myHumChart = new Chart(ctx, {
     type: 'line',
     data: {
-        datasets: datasets
+        datasets: humData
     },
     options: {
         scales: {
@@ -77,9 +99,50 @@ var scatterChart2 = new Chart(ctx, {
             }]
         },
 	responsive: true,
-	maintainAspectRatio: false
+	maintainAspectRatio: false,
+	animation: false
     }
 });
-});
+function showGraph(range) {
+	window.myTempChart.data.datasets.forEach((dataset) => {
+		dataset.data = [];
+	});
+	window.myHumChart.data.datasets.forEach((dataset) => {
+		dataset.data = [];
+	});
+	$.getJSON( "/data/graph/" + range + "/{{date}}", function( data ) {
+		colors = {
+		    'living-room-remote': "rgba(75,192,192,1)",
+		    'living-room-22': "rgba(192,75,192,1)",
+		    'living-room-22bis': "rgba(192,192,75,1)",
+		}
+		for (var key in data)
+		{
+		window.myTempChart.data.datasets.forEach((dataset) => {
+		    if (dataset.label == key) {
+			dataset.data = data[key]['temperatures'];
+		    }
+		});
+		window.myHumChart.data.datasets.forEach((dataset) => {
+		    if (dataset.label == key) {
+			dataset.data = data[key]['humidities'];
+		    }
+		});
+		    window.myTempChart.update();
+		    window.myHumChart.update();
+		}
+	});
+}
+showGraph('day');
 </script>
+<script>
+$(document).ready(function() { 
+$("ul.tabs").tabs({ onShow: function(tab) {
+	showGraph(tab.attr('id'));
+} });
+})
+</script>
+</main>
+</div>
+</body>
 </html>
