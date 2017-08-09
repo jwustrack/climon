@@ -42,9 +42,9 @@
 </div>
 <script>
 colors = {
-    'living-room-remote': "rgba(75,192,192,1)",
-    'living-room-22': "rgba(192,75,192,1)",
-    'living-room-22bis': "rgba(192,192,75,1)",
+{% for sensor in sensor_confs %}
+'{{ sensor['name'] }}': "{{ sensor['color'] }}",
+{% endfor %}
 };
 humData=[];
 tempData=[];
@@ -61,7 +61,7 @@ for (var key in colors)
     humData.push(
         {
             label: key,
-	    data: [],
+            data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
         }
@@ -111,11 +111,6 @@ function showGraph(range) {
 		dataset.data = [];
 	});
 	$.getJSON( "/data/graph/" + range + "/{{date}}", function( data ) {
-		colors = {
-		    'living-room-remote': "rgba(75,192,192,1)",
-		    'living-room-22': "rgba(192,75,192,1)",
-		    'living-room-22bis': "rgba(192,192,75,1)",
-		}
 		for (var key in data)
 		{
 		window.myTempChart.data.datasets.forEach((dataset) => {

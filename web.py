@@ -1,6 +1,5 @@
 import flask
 from flask import render_template
-from plot import plot2file
 import datetime
 import json
 
@@ -52,11 +51,12 @@ def climon(sensor_id):
 
 @app.route('/data/graph/all/<date>')
 def galldata(date):
+    fromDate, toDate = db().getDateSpan()
     sensor_data = {}
     for sensor_id in sensors.iter_ids(conf):
         from collections import defaultdict
         sensor_data[sensor_id] = defaultdict(lambda: [])
-        for d, min_temp, max_temp, avg_temp, min_hum, max_hum, avg_hum in db().getDailyStats(sensor_id):
+        for d, avg_temp, avg_hum in db().get_stats(sensor_id, fromDate, toDate, 'year'):
             sensor_data[sensor_id]['temperatures'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_temp))
             sensor_data[sensor_id]['humidities'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_hum))
     return json.dumps(sensor_data)
@@ -92,7 +92,9 @@ def jsgraph(range, date):
 def jsgraph_today(range):
     assert range in ('day', 'week', 'month', 'year', 'all')
     timestamp = datetime.datetime.now()
-    return render_template('index.html', range=range, date=timestamp.strftime('%Y%m%d'))
+    sensor_confs=[conf['sensor:%s' % sensor_id] for sensor_id in sensors.iter_ids(conf)]
+    logging.debug("Sensor confs: %r" % sensor_confs)
+    return render_template('index.html', range=range, date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
 @app.route('/')
 def index():
