@@ -186,7 +186,7 @@ class Database(object):
         raw_rows = list(self.get_stats_from_raw(sensor, view_range, view_times - stat_view_times))
         self.set_stats(raw_rows, sensor, view_range)
 
-        return sorted(rows + raw_rows, key=lambda r: r[1])
+        return sorted(rows + raw_rows, key=lambda r: r[0])
 
     def getLatest(self, sensor):
         cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? ORDER BY time desc LIMIT 1', (sensor,))

@@ -14,9 +14,10 @@
 <div class="row">
 <div class="col s12">
 <ul class="tabs">
-	<li class="tab col s4"><a href="#day">Day</a></li>
-	<li class="tab col s4"><a href="#week">Week</a></li>
-	<li class="tab col s4"><a href="#all">All</a></li>
+	<li class="tab col s3"><a href="#day">Day</a></li>
+	<li class="tab col s3"><a href="#week">Week</a></li>
+	<li class="tab col s3"><a href="#month">Month</a></li>
+	<li class="tab col s3"><a href="#all">All</a></li>
 </ul>
 </div>
 </div>
@@ -24,6 +25,8 @@
 <div id="day" class="col s12">
 </div>
 <div id="week" class="col s12">
+</div>
+<div id="month" class="col s12">
 </div>
 <div id="all" class="col s12">
 </div>
@@ -42,8 +45,13 @@
 </div>
 <script>
 colors = {
-{% for sensor in sensor_confs %}
-'{{ sensor['name'] }}': "{{ sensor['color'] }}",
+{% for sensor_id, sensor_conf in sensor_confs.items() %}
+'{{ sensor_id }}': "{{ sensor_conf['color'] }}",
+{% endfor %}
+};
+labels = {
+{% for sensor_id, sensor_conf in sensor_confs.items() %}
+'{{ sensor_id }}': "{{ sensor_conf['name'] }}",
 {% endfor %}
 };
 humData=[];
@@ -52,18 +60,20 @@ for (var key in colors)
 {
     tempData.push(
         {
-            label: key,
+            label: labels[key],
             data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
+            key: key,
         }
     );
     humData.push(
         {
-            label: key,
+            label: labels[key],
             data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
+            key: key,
         }
     );
 }
@@ -114,12 +124,12 @@ function showGraph(range) {
 		for (var key in data)
 		{
 		window.myTempChart.data.datasets.forEach((dataset) => {
-		    if (dataset.label == key) {
+		    if (dataset.key == key) {
 			dataset.data = data[key]['temperatures'];
 		    }
 		});
 		window.myHumChart.data.datasets.forEach((dataset) => {
-		    if (dataset.label == key) {
+		    if (dataset.key == key) {
 			dataset.data = data[key]['humidities'];
 		    }
 		});
