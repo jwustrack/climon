@@ -173,6 +173,17 @@ class Database(object):
         self.db.executemany('INSERT INTO climon_stats (sensor, view_range, time, temperature_avg, humidity_avg) VALUES (?, ?, ?, ?, ?)', [[sensor, view_range] + list(r) for r in rows])
         self.db.commit()
 
+    def get_null_stats(self, view_times):
+        for view_time in view_times:
+            yield view_time, None, None
+
+    def get_view_times(self, rows):
+        view_times = set()
+        for row in rows:
+            time, _, _ = row
+            view_times.add(time)
+        return view_times
+
     def get_stats(self, sensor, time_from, time_to, view_range):
         assert view_range in view_ranges
 
@@ -180,9 +191,7 @@ class Database(object):
 
         stat_view_times = set()
         rows = cursor.fetchall()
-        for row in rows:
-            time, temp_avg, hum_avg = row
-            stat_view_times.add(time)
+        stat_view_times = self.get_view_times(rows)
         logging.debug('Found %d rows in stats table' % len(stat_view_times))
 
         view_times = set(iter_view_times(time_from, time_to, view_range))
@@ -190,8 +199,10 @@ class Database(object):
         if missing_view_times:
             logging.debug('Need to fetch raw stats for: %r' % missing_view_times)
             raw_rows = list(self.get_stats_from_raw(sensor, view_range, missing_view_times))
-            self.set_stats(raw_rows, sensor, view_range)
-            rows += raw_rows
+            raw_view_times = self.get_view_times(raw_rows)
+            null_rows = list(self.get_null_stats(missing_view_times - raw_view_times))
+            self.set_stats(raw_rows + null_rows, sensor, view_range)
+            rows += raw_rows + null_rows
 
         return sorted(rows, key=lambda r: r[0])
 
