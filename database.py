@@ -93,6 +93,7 @@ view_ranges = dict(
     week=td(hours=1),
     month=td(hours=6),
     year=td(days=3),
+    all=td(days=3),
     )
 
 def round_datetime(dt, view_range):

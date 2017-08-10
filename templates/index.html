@@ -61,6 +61,8 @@ for (var key in colors)
     tempData.push(
         {
             label: labels[key],
+            pointRadius: 0,
+            borderWidth: 2,
             data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
@@ -70,6 +72,8 @@ for (var key in colors)
     humData.push(
         {
             label: labels[key],
+            pointRadius: 0,
+            borderWidth: 2,
             data: [],
             backgroundColor: "rgba(0,0,0,0)",
             borderColor: colors[key],
@@ -88,7 +92,7 @@ window.myTempChart = new Chart(ctx, {
             xAxes: [{
                 type: 'time',
                 position: 'bottom'
-            }]
+            }],
         },
 	responsive: true,
 	maintainAspectRatio: false,
@@ -106,7 +110,7 @@ window.myHumChart = new Chart(ctx, {
             xAxes: [{
                 type: 'time',
                 position: 'bottom'
-            }]
+            }],
         },
 	responsive: true,
 	maintainAspectRatio: false,
@@ -120,7 +124,7 @@ function showGraph(range) {
 	window.myHumChart.data.datasets.forEach((dataset) => {
 		dataset.data = [];
 	});
-	$.getJSON( "/data/graph/" + range + "/{{date}}", function( data ) {
+	$.getJSON( "/data/" + range + "/{{date}}", function( data ) {
 		for (var key in data)
 		{
 		window.myTempChart.data.datasets.forEach((dataset) => {
