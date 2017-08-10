@@ -52,7 +52,7 @@ def ganydata(range, yyyymmdd):
 def index():
     timestamp = datetime.now()
     sensor_confs=dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
-    return render_template('index.html', range='day', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
+    return render_template('index.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
 def main(conf_fname):
     global conf
