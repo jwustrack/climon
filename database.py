@@ -157,6 +157,7 @@ class Database(object):
             yield row
 
     def get_stats_from_raw(self, sensor, view_range, view_times):
+        logging.debug('Getting raw stats for %r' % view_times)
         interval = floor(view_ranges[view_range].total_seconds())
         # we need to make datetime timesone unaware for the WHERE ... IN to work
         view_times = [ t.replace(tzinfo=None) for t in view_times ]
@@ -170,6 +171,7 @@ class Database(object):
     def set_stats(self, rows, sensor, view_range):
         logging.debug('INSERT %r %r %r' % (sensor, view_range, rows))
         self.db.executemany('INSERT INTO climon_stats (sensor, view_range, time, temperature_avg, humidity_avg) VALUES (?, ?, ?, ?, ?)', [[sensor, view_range] + list(r) for r in rows])
+        self.db.commit()
 
     def get_stats(self, sensor, time_from, time_to, view_range):
         assert view_range in view_ranges
@@ -181,12 +183,17 @@ class Database(object):
         for row in rows:
             time, temp_avg, hum_avg = row
             stat_view_times.add(time)
+        logging.debug('Found %d rows in stats table' % len(stat_view_times))
 
         view_times = set(iter_view_times(time_from, time_to, view_range))
-        raw_rows = list(self.get_stats_from_raw(sensor, view_range, view_times - stat_view_times))
-        self.set_stats(raw_rows, sensor, view_range)
+        missing_view_times = view_times - stat_view_times
+        if missing_view_times:
+            logging.debug('Need to fetch raw stats for: %r' % missing_view_times)
+            raw_rows = list(self.get_stats_from_raw(sensor, view_range, missing_view_times))
+            self.set_stats(raw_rows, sensor, view_range)
+            rows += raw_rows
 
-        return sorted(rows + raw_rows, key=lambda r: r[0])
+        return sorted(rows, key=lambda r: r[0])
 
     def getLatest(self, sensor):
         cursor = self.db.execute('SELECT time, temperature, humidity FROM climon WHERE sensor = ? ORDER BY time desc LIMIT 1', (sensor,))

@@ -1,9 +1,9 @@
 [common]
-database=climon.db.test
+database=climon.db.sample
 port=8765
 sensor-interval=0
 
-[sensor:test]
+[sensor:sine]
 color=#ff0000
 name=sine
 type=sine
