@@ -30,7 +30,7 @@ def climon(sensor_id):
 
 range_dates = dict(
 	day=lambda d: (d, d + timedelta(days=1)),
-	week=lambda d: (d - timedelta(days=6), d - timedelta(days=1)),
+	week=lambda d: (d - timedelta(days=6), d + timedelta(days=1)),
 	month=lambda d: (d - timedelta(days=30), d + timedelta(days=1)),
 	all=lambda d: (db().getDateSpan()),
 )
