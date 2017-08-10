@@ -188,6 +188,11 @@ class Database(object):
     def get_stats(self, sensor, time_from, time_to, view_range):
         assert view_range in view_ranges
 
+        # Don't attempt to get anything outside of the date range
+        minDate, maxDate = self.getDateSpan()
+        time_from = max(minDate, time_from)
+        time_to = min(maxDate, time_to)
+
         cursor = self.db.execute('SELECT time [timestamp], temperature_avg, humidity_avg FROM climon_stats WHERE sensor = ? AND view_range = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, view_range, time_from, time_to))
 
         stat_view_times = set()
