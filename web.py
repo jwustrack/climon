@@ -41,12 +41,22 @@ def ganydata(range, yyyymmdd):
     day = datetime.strptime(yyyymmdd, '%Y%m%d')
     from_date, to_date = range_dates[range](day)
     sensor_data = {}
+    labels = []
+
     for sensor_id in sensors.iter_ids(conf):
         sensor_data[sensor_id] = defaultdict(lambda: [])
-        for d, avg_temp, avg_hum in db().get_stats(sensor_id, from_date, to_date, range):
-            sensor_data[sensor_id]['temperatures'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_temp))
-            sensor_data[sensor_id]['humidities'].append(dict(x=d.strftime('%Y%m%dT%H%M%S'), y=avg_hum))
-    return json.dumps(sensor_data)
+        for d, avg_temp, min_temp, max_temp, avg_hum, min_hum, max_hum in db().get_stats(sensor_id, from_date, to_date, range):
+            sensor_data[sensor_id]['temperatures'].append(avg_temp)
+            sensor_data[sensor_id]['temperatures_min'].append(min_temp)
+            sensor_data[sensor_id]['temperatures_max'].append(max_temp)
+            sensor_data[sensor_id]['humidities'].append(avg_hum)
+            sensor_data[sensor_id]['humidities_min'].append(min_hum)
+            sensor_data[sensor_id]['humidities_max'].append(max_hum)
+
+    for d in database.iter_view_times(from_date, to_date, range):
+            labels.append(d.strftime('%Y%m%dT%H%M%S'))
+
+    return json.dumps(dict(labels=labels, data=sensor_data))
 
 @app.route('/')
 def index():
@@ -54,7 +64,7 @@ def index():
     sensor_confs=dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
     return render_template('index.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
-def main(conf_fname):
+def main(conf_fname, debug=False):
     global conf
 
     logging.basicConfig(filename='climon.log',
@@ -64,7 +74,7 @@ def main(conf_fname):
     logging.info('Reading conf')
     conf = read_conf(conf_fname)
     logging.info('Reading conf done')
-    app.run(debug=False, host='0.0.0.0', threaded=True, port=int(conf['common']['port']))
+    app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf['common']['port']))
 
 if __name__ == '__main__':
     import daemon
@@ -83,3 +93,5 @@ if __name__ == '__main__':
         daemon.stop()
     elif 'restart' == sys.argv[1]: 
         daemon.restart()
+    elif 'debug' == sys.argv[1]:
+        main('climon.conf', debug=True)

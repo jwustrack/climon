@@ -6,7 +6,7 @@
 <body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
-<script src="/static/Chart.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
 
 <div class="container">
 <header>
@@ -44,40 +44,98 @@
 </div>
 </div>
 <script>
-colors = {
+function convertHex(hex, opacity){
+    hex = hex.replace('#','');
+    r = parseInt(hex.substring(0,2), 16);
+    g = parseInt(hex.substring(2,4), 16);
+    b = parseInt(hex.substring(4,6), 16);
+
+    result = 'rgba('+r+','+g+','+b+','+opacity/100+')';
+    return result;
+}
+
+sensors = {
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
-'{{ sensor_id }}': "{{ sensor_conf['color'] }}",
-{% endfor %}
-};
-labels = {
-{% for sensor_id, sensor_conf in sensor_confs.items() %}
-'{{ sensor_id }}': "{{ sensor_conf['name'] }}",
+'{{ sensor_id }}': {
+        color: '{{ sensor_conf['color'] }}',
+        bgColor: convertHex('{{ sensor_conf['color'] }}', 50),
+        name: '{{ sensor_conf['name'] }}',
+        },
 {% endfor %}
 };
 humData=[];
 tempData=[];
-for (var key in colors)
+for (var key in sensors)
 {
     tempData.push(
         {
-            label: labels[key],
+            label: sensors[key]['name'] + '_min',
+            pointRadius: 0,
+            borderWidth: 1,
+            data: [],
+            backgroundColor: sensors[key]['bgColor'],
+            borderColor: sensors[key]['bgColor'],
+            key: key + '_min',
+            fill: 2,
+        }
+    );
+    tempData.push(
+        {
+            label: sensors[key]['name'],
+            pointRadius: 0,
+            borderWidth: 2,
+            data: [],
+            backgroundColor: "rgba(0, 0, 0, 0)",
+            borderColor: sensors[key]['color'],
+            key: key,
+            fill: false,
+        }
+    );
+    tempData.push(
+        {
+            label: sensors[key]['name'] + '_max',
+            pointRadius: 0,
+            borderWidth: 1,
+            data: [],
+            backgroundColor: sensors[key]['bgColor'],
+            borderColor: sensors[key]['bgColor'],
+            key: key + '_max',
+            fill: false,
+        }
+    );
+    humData.push(
+        {
+            label: sensors[key]['name'] + '_min',
+            pointRadius: 0,
+            borderWidth: 1,
+            data: [],
+            backgroundColor: sensors[key]['bgColor'],
+            borderColor: sensors[key]['bgColor'],
+            key: key + '_min',
+            fill: 2,
+        }
+    );
+    humData.push(
+        {
+            label: sensors[key]['name'],
             pointRadius: 0,
             borderWidth: 2,
             data: [],
             backgroundColor: "rgba(0,0,0,0)",
-            borderColor: colors[key],
+            borderColor: sensors[key]['color'],
             key: key,
         }
     );
     humData.push(
         {
-            label: labels[key],
+            label: sensors[key]['name'] + '_max',
             pointRadius: 0,
-            borderWidth: 2,
+            borderWidth: 1,
             data: [],
-            backgroundColor: "rgba(0,0,0,0)",
-            borderColor: colors[key],
-            key: key,
+            backgroundColor: sensors[key]['bgColor'],
+            borderColor: sensors[key]['bgColor'],
+            key: key + '_max',
+            fill: false,
         }
     );
 }
@@ -88,6 +146,11 @@ window.myTempChart = new Chart(ctx, {
         datasets: tempData
     },
     options: {
+        plugins: {
+            filler: {
+                propagate: false
+            }
+        },
         scales: {
             xAxes: [{
                 type: 'time',
@@ -125,22 +188,37 @@ function showGraph(range) {
 	window.myHumChart.data.datasets.forEach((dataset) => {
 		dataset.data = [];
 	});
-	$.getJSON( "/data/" + range + "/{{date}}", function( data ) {
-		for (var key in data)
+	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
+        window.myHumChart.data.labels = resp['labels'];
+        window.myTempChart.data.labels = resp['labels'];
+
+		for (var key in resp['data'])
 		{
-		window.myTempChart.data.datasets.forEach((dataset) => {
-		    if (dataset.key == key) {
-			dataset.data = data[key]['temperatures'];
-		    }
-		});
-		window.myHumChart.data.datasets.forEach((dataset) => {
-		    if (dataset.key == key) {
-			dataset.data = data[key]['humidities'];
-		    }
-		});
-		    window.myTempChart.update();
-		    window.myHumChart.update();
+		    window.myTempChart.data.datasets.forEach((dataset) => {
+		        if (dataset.key == key) {
+		    	    dataset.data = resp['data'][key]['temperatures'];
+		        }
+		        if (dataset.key == key + '_min') {
+		    	    dataset.data = resp['data'][key]['temperatures_min'];
+		        }
+		        if (dataset.key == key + '_max') {
+		    	    dataset.data = resp['data'][key]['temperatures_max'];
+		        }
+		    });
+		    window.myHumChart.data.datasets.forEach((dataset) => {
+		        if (dataset.key == key) {
+		    	    dataset.data = resp['data'][key]['humidities'];
+		        }
+		        if (dataset.key == key + '_min') {
+		    	    dataset.data = resp['data'][key]['humidities_min'];
+		        }
+		        if (dataset.key == key + '_max') {
+		    	    dataset.data = resp['data'][key]['humidities_max'];
+		        }
+		    });
 		}
+		window.myTempChart.update();
+		window.myHumChart.update();
 	});
 }
 if (window.location.hash) {

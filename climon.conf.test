@@ -4,7 +4,7 @@ port=8765
 sensor-interval=0
 
 [sensor:sine]
-color=#ff0000
+color=#5588bb
 name=sine
 type=sine
 source=null

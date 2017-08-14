@@ -140,7 +140,7 @@ class Database(object):
 
     def setup(self):
         try:
-            self.db.execute("CREATE TABLE climon_stats (time timestamp, sensor, view_range, temperature_avg, humidity_avg)")
+            self.db.execute("CREATE TABLE climon_stats (time timestamp, sensor, view_range, temperature_avg, temperature_min, temperature_max, humidity_avg, humidity_min, humidity_max)")
             self.db.execute("CREATE TABLE climon (time timestamp, sensor, temperature, humidity)")
             self.db.commit()
         except sqlite3.OperationalError:
@@ -162,7 +162,7 @@ class Database(object):
         interval = floor(view_ranges[view_range].total_seconds())
         # we need to make datetime timesone unaware for the WHERE ... IN to work
         view_times = [ t.replace(tzinfo=None) for t in view_times ]
-        query = 'select datetime((strftime(\'%%s\', time) / ?) * ?, \'unixepoch\') as "interval [timestamp]", avg(temperature), avg(humidity) from climon where sensor = ? AND "interval [timestamp]" in (%s) group by "interval [timestamp]" order by "interval [timestamp]"' % ",".join(["?"]*len(view_times))
+        query = 'select datetime((strftime(\'%%s\', time) / ?) * ?, \'unixepoch\') as "interval [timestamp]", avg(temperature), min(temperature), max(temperature), avg(humidity), min(humidity), max(humidity) from climon where sensor = ? AND "interval [timestamp]" in (%s) group by "interval [timestamp]" order by "interval [timestamp]"' % ",".join(["?"]*len(view_times))
         logging.debug('Query %r args %r' % (query, [interval, interval, sensor] + view_times))
         cursor = self.db.execute(query, [interval, interval, sensor] + view_times)
 
@@ -171,17 +171,17 @@ class Database(object):
 
     def set_stats(self, rows, sensor, view_range):
         logging.debug('INSERT %r %r %r' % (sensor, view_range, rows))
-        self.db.executemany('INSERT INTO climon_stats (sensor, view_range, time, temperature_avg, humidity_avg) VALUES (?, ?, ?, ?, ?)', [[sensor, view_range] + list(r) for r in rows])
+        self.db.executemany('INSERT INTO climon_stats (sensor, view_range, time, temperature_avg, temperature_min, temperature_max, humidity_avg, humidity_min, humidity_max) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [[sensor, view_range] + list(r) for r in rows])
         self.db.commit()
 
     def get_null_stats(self, view_times):
         for view_time in view_times:
-            yield view_time, None, None
+            yield view_time, None, None, None, None, None, None
 
     def get_view_times(self, rows):
         view_times = set()
         for row in rows:
-            time, _, _ = row
+            time, _, _, _, _, _, _ = row
             view_times.add(time)
         return view_times
 
@@ -193,7 +193,7 @@ class Database(object):
         time_from = max(minDate, time_from)
         time_to = min(maxDate, time_to)
 
-        cursor = self.db.execute('SELECT time [timestamp], temperature_avg, humidity_avg FROM climon_stats WHERE sensor = ? AND view_range = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, view_range, time_from, time_to))
+        cursor = self.db.execute('SELECT time [timestamp], temperature_avg, temperature_min, temperature_max, humidity_avg, humidity_min, humidity_max FROM climon_stats WHERE sensor = ? AND view_range = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, view_range, time_from, time_to))
 
         stat_view_times = set()
         rows = cursor.fetchall()

@@ -4,8 +4,8 @@ Accessors for the sensors defined in the configuration
 >>> import conf
 >>> c = conf.read('climon.conf.test')
 >>> list(iter_ids(c))
-['test']
->>> get_by_id(c, 'test') # doctest: +ELLIPSIS
+['sine']
+>>> get_by_id(c, 'sine') # doctest: +ELLIPSIS
 functools.partial(<function sensor_sine... at ...>, 'null')
 '''
 
