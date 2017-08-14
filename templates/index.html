@@ -32,13 +32,11 @@
 </div>
 <main>
 <div class="card-panel">
-<h5>Temperature</h5>
 <div style="height: 200px;">
 <canvas id="tempChart" style="height: 200px"></canvas>
 </div>
 </div>
 <div class="card-panel">
-<h5>Humidity</h5>
 <div style="height: 200px;">
 <canvas id="humChart" style="height: 200px"></canvas>
 </div>
@@ -146,20 +144,24 @@ window.myTempChart = new Chart(ctx, {
         datasets: tempData
     },
     options: {
-        plugins: {
-            filler: {
-                propagate: false
-            }
+        legend: {
+            display: false
         },
         scales: {
             xAxes: [{
                 type: 'time',
-                position: 'bottom'
+                position: 'bottom',
             }],
+            yAxes: [{
+              scaleLabel: {
+                display: true,
+                labelString: 'Temperature °C'
+              }
+            }]
         },
-	responsive: true,
-	maintainAspectRatio: false,
-	animation: false
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false
     }
 });
 var ctx = $("#humChart");
@@ -169,15 +171,24 @@ window.myHumChart = new Chart(ctx, {
         datasets: humData
     },
     options: {
+        legend: {
+            display: false
+        },
         scales: {
             xAxes: [{
                 type: 'time',
                 position: 'bottom'
             }],
+            yAxes: [{
+              scaleLabel: {
+                display: true,
+                labelString: 'Humidity %'
+              }
+            }]
         },
-	responsive: true,
-	maintainAspectRatio: false,
-	animation: false
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false
     }
 });
 function showGraph(range) {
