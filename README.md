@@ -44,7 +44,7 @@ There is one configuration section per sensor you want to monitor. The part afte
 Once you have started fetching values for this sensor, don't change this ID or your data will become inaccessible.
 The content of each sensor section will configure the sensor.
 
-#### Configure a sensor connected to the raspberry pi itself ####
+#### Sensor connected to the raspberry pi itself ####
 
 ```ini
 # Sensor with ID "living-room"
@@ -62,22 +62,23 @@ source=4
 # Color of the graph on the web interface
 color=#0033ff
 ```
+#### Sensor on a remote climon instance ####
+
 Each sensor will be published on a URL of the form:
 
 `http://<ip>:<port>/sensor/<sensor_id>`
 
-So you can monitor its values from another climon instance and display graphs from multiple sensors in and around your house. To use such a remote sensor, see the following section.
+Thanks to this you can monitor its values from another climon instance and display graphs from multiple sensors in and around your house. To use such a remote sensor, use a `climon` sensor type:
 
-#### Example of a sensor from a remote climon instance ####
 
 ```ini
 [sensor:garden]
 name=Garden
 
-# we get values from a remote climon instance
+# Get values from a remote climon instance
 type=climon
 
-# the url on which sensor data is published by the other climon instance: http://<ip>:<port>/sensor/<sensor_id>
+# Url on which sensor data is published by the other climon instance: http://<ip>:<port>/sensor/<sensor_id>
 source=http://192.168.1.102:8765/sensor/garden
 
 color=#ff3300
