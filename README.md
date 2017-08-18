@@ -4,7 +4,7 @@ Monitors DHT11 and DHT22 sensors connected to one or several Raspberry Pi(s) and
 
 ## Installation
 
-Get git, python3 and the correspondong pip:
+Get `git`, `python3` and the correspondong `pip`:
 
 `$ sudo apt-get install git python3 python3-pip`
 
@@ -12,9 +12,15 @@ Install the DHT library using pip:
 
 `$ pip3 install adafruit_python_dht`
 
-Clone the climon repository:
+Clone the climon repository. This will create a directory `climon` in your current directory.
 
 `$ git clone https://github.com/jwustrack/climon/`
+
+Enter the climon directory created by the command above.
+
+`$ cd climon`
+
+Now you can configure and start the daemon as described below.
 
 ## Configuration
 
@@ -88,7 +94,7 @@ color=#ff3300
 
 Once its dependencies are installed and climon.conf is fully configured, you can start the deamon.
 ```sh
-$ climon.sh start
+$ ./climon.sh start
 ```
 
 And access the web interface:
@@ -98,12 +104,12 @@ And access the web interface:
 Configuration changes will be taken into account only after restarting the deamon:
 
 ```sh
-$ climon.sh restart
+$ ./climon.sh restart
 ```
 You can also stop it:
 
 ```sh
-$ climon.sh stop
+$ ./climon.sh stop
 ```
 For debugging purposes you can start the web UI and monitoring processes individually:
 
