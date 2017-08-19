@@ -142,6 +142,7 @@ class Database(object):
         try:
             self.db.execute("CREATE TABLE climon_stats (time timestamp, sensor, view_range, temperature_avg, temperature_min, temperature_max, humidity_avg, humidity_min, humidity_max)")
             self.db.execute("CREATE TABLE climon (time timestamp, sensor, temperature, humidity)")
+            self.db.execute("CREATE INDEX time_index ON climon(time)")
             self.db.commit()
         except sqlite3.OperationalError:
             pass
@@ -189,7 +190,9 @@ class Database(object):
         assert view_range in view_ranges
 
         # Don't attempt to get anything outside of the date range
+        logging.debug('Get datespan')
         minDate, maxDate = self.getDateSpan()
+        logging.debug('Get datespan: done')
         time_from = max(minDate, time_from)
         time_to = min(maxDate, time_to)
 
@@ -197,8 +200,9 @@ class Database(object):
 
         stat_view_times = set()
         rows = cursor.fetchall()
+        logging.debug('Found %d rows in stats table' % len(rows))
         stat_view_times = self.get_view_times(rows)
-        logging.debug('Found %d rows in stats table' % len(stat_view_times))
+        logging.debug('Computed view times.')
 
         view_times = set(iter_view_times(time_from, time_to, view_range))
         missing_view_times = view_times - stat_view_times
@@ -217,8 +221,12 @@ class Database(object):
         return cursor.fetchone()
 
     def getDateSpan(self):
-        cursor = self.db.execute('SELECT min(time) as "min_t [timestamp]", max(time) as "max_t [timestamp]" FROM climon')
-        return cursor.fetchone()
+        # Getting min and max separately is much faster in sqlite3
+        cursor = self.db.execute('SELECT min(time) as "min_t [timestamp]" FROM climon')
+        minTime = cursor.fetchone()[0]
+        cursor = self.db.execute('SELECT max(time) as "max_t [timestamp]" FROM climon')
+        maxTime = cursor.fetchone()[0]
+        return minTime, maxTime
 
 if __name__ == '__main__':
     import doctest
