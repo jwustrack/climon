@@ -53,8 +53,14 @@ def ganydata(range, yyyymmdd):
             sensor_data[sensor_id]['humidities_min'].append(min_hum)
             sensor_data[sensor_id]['humidities_max'].append(max_hum)
 
+        temp, hum = sensors.get_by_id(conf, sensor_id)()
+        sensor_data[sensor_id]['temperatures'].append(temp)
+        sensor_data[sensor_id]['humidities'].append(hum)
+
     for d in database.iter_view_times(from_date, to_date, range):
-            labels.append(d.strftime('%Y%m%dT%H%M%S'))
+        labels.append(d.strftime('%Y%m%dT%H%M%S'))
+
+    labels.append(datetime.now().strftime('%Y%m%dT%H%M%S'))
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 

@@ -192,14 +192,16 @@ window.myHumChart = new Chart(ctx, {
     }
 });
 function showGraph(range) {
-	location.hash = '#' + range;
-	window.myTempChart.data.datasets.forEach((dataset) => {
-		dataset.data = [];
-	});
-	window.myHumChart.data.datasets.forEach((dataset) => {
-		dataset.data = [];
-	});
 	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
+        alert('update');
+        location.hash = '#' + range;
+        window.myTempChart.data.datasets.forEach((dataset) => {
+            dataset.data = [];
+        });
+        window.myHumChart.data.datasets.forEach((dataset) => {
+            dataset.data = [];
+        });
+
         window.myHumChart.data.labels = resp['labels'];
         window.myTempChart.data.labels = resp['labels'];
 
@@ -230,6 +232,8 @@ function showGraph(range) {
 		}
 		window.myTempChart.update();
 		window.myHumChart.update();
+
+        setTimeout(function(){showGraph(range)}, 60000);
 	});
 }
 if (window.location.hash) {
