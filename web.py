@@ -29,11 +29,19 @@ def climon(sensor_id):
     return '%f %f' % (temp, hum)
 
 range_dates = dict(
-	day=lambda d: (d, d + timedelta(days=1)),
-	week=lambda d: (d - timedelta(days=6), d + timedelta(days=1)),
-	month=lambda d: (d - timedelta(days=30), d + timedelta(days=1)),
-	all=lambda d: (db().getDateSpan()),
+    day=lambda d: (d, d + timedelta(days=1)),
+    week=lambda d: (d - timedelta(days=6), d + timedelta(days=1)),
+    month=lambda d: (d - timedelta(days=30), d + timedelta(days=1)),
+    all=lambda d: (db().getDateSpan()),
 )
+
+@app.route('/data/now')
+def gnowdata():
+    sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
+    for sensor_id in sensors.iter_ids(conf):
+        hum, temp = sensors.get_by_id(conf, sensor_id)()
+        sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
+    return json.dumps(sensor_data)
 
 @app.route('/data/<range>/<yyyymmdd>')
 def ganydata(range, yyyymmdd):
@@ -45,6 +53,7 @@ def ganydata(range, yyyymmdd):
 
     for sensor_id in sensors.iter_ids(conf):
         sensor_data[sensor_id] = defaultdict(lambda: [])
+        logging.debug("Getting stats for %s" % sensor_id)
         for d, avg_temp, min_temp, max_temp, avg_hum, min_hum, max_hum in db().get_stats(sensor_id, from_date, to_date, range):
             sensor_data[sensor_id]['temperatures'].append(avg_temp)
             sensor_data[sensor_id]['temperatures_min'].append(min_temp)
@@ -52,9 +61,15 @@ def ganydata(range, yyyymmdd):
             sensor_data[sensor_id]['humidities'].append(avg_hum)
             sensor_data[sensor_id]['humidities_min'].append(min_hum)
             sensor_data[sensor_id]['humidities_max'].append(max_hum)
+        logging.debug("Getting stats for %s: done" % sensor_id)
+
+        sensor_data[sensor_id]['temperatures'].append(None)
+        sensor_data[sensor_id]['humidities'].append(None)
 
     for d in database.iter_view_times(from_date, to_date, range):
-            labels.append(d.strftime('%Y%m%dT%H%M%S'))
+        labels.append(d.strftime('%Y%m%dT%H%M%S'))
+
+    labels.append(datetime.now().strftime('%Y%m%dT%H%M%S'))
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 

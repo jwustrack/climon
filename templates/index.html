@@ -13,6 +13,7 @@
 <h4>climon</h4>
 <div class="row">
 <div class="col s12">
+<div id="current"></div>
 <ul class="tabs">
 	<li class="tab col s3"><a href="#day">Day</a></li>
 	<li class="tab col s3"><a href="#week">Week</a></li>
@@ -52,6 +53,7 @@ function convertHex(hex, opacity){
     return result;
 }
 
+//var timeout;
 sensors = {
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
 '{{ sensor_id }}': {
@@ -74,7 +76,7 @@ for (var key in sensors)
             backgroundColor: sensors[key]['bgColor'],
             borderColor: sensors[key]['bgColor'],
             key: key + '_min',
-            fill: 2,
+            fill: '+2',
         }
     );
     tempData.push(
@@ -110,7 +112,7 @@ for (var key in sensors)
             backgroundColor: sensors[key]['bgColor'],
             borderColor: sensors[key]['bgColor'],
             key: key + '_min',
-            fill: 2,
+            fill: '+2',
         }
     );
     humData.push(
@@ -191,45 +193,79 @@ window.myHumChart = new Chart(ctx, {
         animation: false
     }
 });
+function setCurrentTemp () {
+	$.getJSON( "/data/now", function( resp ) {
+		var s = "";
+		for (var sensor_id in resp['sensors'])
+		{
+			s += "<span style='color:" + sensors[sensor_id]['color'] + "'>" + sensors[sensor_id]['name'] + ": <strong>" +
+				Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
+				Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%</strong></span><br/>";
+		}
+		$("#current")[0].innerHTML = s;
+
+
+		window.myTempChart.data.datasets.forEach((dataset) => {
+		    if (dataset.key in resp['sensors'])
+			    dataset.data[dataset.data.length - 1] = resp['sensors'][dataset.key]["temperature"];
+		});
+		window.myHumChart.data.datasets.forEach((dataset) => {
+		    if (dataset.key in resp['sensors'])
+			    dataset.data[dataset.data.length - 1] = resp['sensors'][dataset.key]["humidity"];
+		});
+		window.myHumChart.data.labels[window.myHumChart.data.labels.length - 1] = resp['now'];
+		window.myTempChart.data.labels[window.myTempChart.data.labels.length - 1] = resp['now'];
+
+		window.myTempChart.update();
+		window.myHumChart.update();
+
+		setTimeout(setCurrentTemp, 10000);
+	});
+}
 function showGraph(range) {
-	location.hash = '#' + range;
-	window.myTempChart.data.datasets.forEach((dataset) => {
-		dataset.data = [];
-	});
-	window.myHumChart.data.datasets.forEach((dataset) => {
-		dataset.data = [];
-	});
 	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
+        location.hash = '#' + range;
+        //window.myTempChart.data.datasets.forEach((dataset) => {
+        //    dataset.data = dataset.data.slice(-1);
+        //});
+        //window.myHumChart.data.datasets.forEach((dataset) => {
+        //    dataset.data = dataset.data.slice(-1);
+        //});
+
         window.myHumChart.data.labels = resp['labels'];
         window.myTempChart.data.labels = resp['labels'];
 
-		for (var key in resp['data'])
-		{
-		    window.myTempChart.data.datasets.forEach((dataset) => {
-		        if (dataset.key == key) {
-		    	    dataset.data = resp['data'][key]['temperatures'];
-		        }
-		        if (dataset.key == key + '_min') {
-		    	    dataset.data = resp['data'][key]['temperatures_min'];
-		        }
-		        if (dataset.key == key + '_max') {
-		    	    dataset.data = resp['data'][key]['temperatures_max'];
-		        }
-		    });
-		    window.myHumChart.data.datasets.forEach((dataset) => {
-		        if (dataset.key == key) {
-		    	    dataset.data = resp['data'][key]['humidities'];
-		        }
-		        if (dataset.key == key + '_min') {
-		    	    dataset.data = resp['data'][key]['humidities_min'];
-		        }
-		        if (dataset.key == key + '_max') {
-		    	    dataset.data = resp['data'][key]['humidities_max'];
-		        }
-		    });
+	for (var key in resp['data'])
+	{
+	    window.myTempChart.data.datasets.forEach((dataset) => {
+		if (dataset.key == key) {
+		    dataset.data = resp['data'][key]['temperatures'];
 		}
-		window.myTempChart.update();
-		window.myHumChart.update();
+		if (dataset.key == key + '_min') {
+		    dataset.data = resp['data'][key]['temperatures_min'];
+		}
+		if (dataset.key == key + '_max') {
+		    dataset.data = resp['data'][key]['temperatures_max'];
+		}
+	    });
+	    window.myHumChart.data.datasets.forEach((dataset) => {
+		if (dataset.key == key) {
+		    dataset.data = resp['data'][key]['humidities'];
+		}
+		if (dataset.key == key + '_min') {
+		    dataset.data = resp['data'][key]['humidities_min'];
+		}
+		if (dataset.key == key + '_max') {
+		    dataset.data = resp['data'][key]['humidities_max'];
+		}
+	    });
+	}
+	window.myTempChart.update();
+	window.myHumChart.update();
+
+	//clearTimeout(timeout);
+	// Update graph every minute
+        //timeout = setTimeout(function(){showGraph(range)}, 60*1000);
 	});
 }
 if (window.location.hash) {
@@ -240,7 +276,9 @@ if (window.location.hash) {
 </script>
 <script>
 $(document).ready(function() { 
+setCurrentTemp();
 $("ul.tabs").tabs({ onShow: function(tab) {
+	//clearTimeout(timeout);
 	showGraph(tab.attr('id'));
 } });
 })

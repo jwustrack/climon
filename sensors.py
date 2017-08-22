@@ -13,7 +13,10 @@ from functools import partial
 
 def sensor_dht11(source):
     import Adafruit_DHT
-    return Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, int(source))
+    hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, int(source))
+    if hum < 0 or hum > 100:
+        raise ValueError('humidity out of bounds')
+    return hum, temp
 
 def sensor_dht22(source):
     import Adafruit_DHT

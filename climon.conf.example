@@ -1,18 +1,39 @@
 [common]
+# the database file
 database=climon.db
-sensor-interval=600
 
+# the port for the web interface
+port=8765
+
+# the interval in seconds at which new values are fetched from each sensor
+monitor-interval=60
+
+
+
+# Sensor with ID "living-room"
 [sensor:living-room]
+
+# Name of the sensor (displayed on the web interface)
 name=Living room
-type=DHT11
+
+# Type of sensor (DHT11, DHT22 or climon)
+type=DHT22
+
+# Source: For DHT11 or DHT22 this is the PIN number
 source=4
+
+# Color of the graph on the web interface
+color=#0033ff
+
+
 
 [sensor:garden]
 name=Garden
-type=DHT22
-source=1
 
-[sensor:bathroom]
-name=Bathroom
+# Get values from a remote climon instance
 type=climon
-source=http://192.168.1.111:8765/sensor/bathroom
+
+# Url on which sensor data is published by the other climon instance: http://<ip>:<port>/sensor/<sensor_id>
+source=http://192.168.1.102:8765/sensor/garden
+
+color=#ff3300
