@@ -114,3 +114,11 @@ or
 ```sh
 $ python3 mon.py debug
 ```
+
+## Autostart
+
+To run `climon` during the boot process, run:
+
+```sh
+sudo ./autostart.sh
+```

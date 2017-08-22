@@ -1,5 +1,7 @@
 root=$(cd $(dirname $0); pwd)
 
+cd $root
+
 case "$1" in
     start)
         python3 $root/mon.py start
