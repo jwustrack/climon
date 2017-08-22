@@ -1,0 +1,22 @@
+root=$(cd $(dirname $0); pwd)
+
+case "$1" in
+    start)
+        python3 $root/mon.py start
+        python3 $root/web.py start
+        ;;
+    stop)
+        python3 $root/mon.py stop
+        python3 $root/web.py stop
+        ;;
+    restart)
+        python3 $root/mon.py restart
+        python3 $root/web.py restart
+        ;;
+    *)
+        echo "Usage: climon {start|stop|restart}" >&2
+        exit 3
+        ;;
+esac
+
+exit 0
