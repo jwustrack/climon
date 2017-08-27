@@ -58,7 +58,7 @@ sensors = {
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
 '{{ sensor_id }}': {
         color: '{{ sensor_conf['color'] }}',
-        bgColor: convertHex('{{ sensor_conf['color'] }}', 50),
+        bgColor: convertHex('{{ sensor_conf['color'] }}', 20),
         name: '{{ sensor_conf['name'] }}',
         },
 {% endfor %}
