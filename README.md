@@ -126,5 +126,20 @@ $ python3 mon.py debug
 To run `climon` during the boot process, run:
 
 ```sh
-sudo ./autostart.sh
+sudo ./tools/autostart.sh
 ```
+
+## Upgrades
+
+To upgrade climon to the latest git HEAD, run the following commands:
+
+```sh
+./climon stop
+git pull
+cp climon.db climon.db.bckp.`date +%s`
+./tools/clean_db.sh climon.db
+./climon start
+```
+
+This creates a backup file of the climon DB in `climon.db.XXXXXXXXXX`.
+If you're happy with the result, you can delete this backup file.
