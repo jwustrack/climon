@@ -77,7 +77,7 @@ def ganydata(range, yyyymmdd):
     for d in database.iter_view_times(from_date, to_date, range):
         labels.append(utc2local(d).strftime('%Y%m%dT%H%M%S'))
 
-    labels.append(utc2local(datetime.now()).strftime('%Y%m%dT%H%M%S'))
+    labels.append(utc2local(datetime.utcnow()).strftime('%Y%m%dT%H%M%S'))
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 
