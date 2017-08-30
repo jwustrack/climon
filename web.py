@@ -1,6 +1,7 @@
 import flask
 from flask import render_template
 from datetime import datetime, timedelta
+import time
 from collections import defaultdict
 import json
 
@@ -29,11 +30,18 @@ def climon(sensor_id):
     return '%f %f' % (temp, hum)
 
 range_dates = dict(
-    day=lambda d: (d, d + timedelta(days=1)),
-    week=lambda d: (d - timedelta(days=6), d + timedelta(days=1)),
-    month=lambda d: (d - timedelta(days=30), d + timedelta(days=1)),
+    hour=lambda d: (d - timedelta(hours=1), d),
+    day=lambda d: (d - timedelta(days=1), d),
+    week=lambda d: (d - timedelta(days=7), d),
+    month=lambda d: (d - timedelta(days=30), d),
+    year=lambda d: (d - timedelta(days=356), d),
     all=lambda d: (db().getDateSpan()),
 )
+
+def utc2local(utc):
+    epoch = time.mktime(utc.timetuple())
+    offset = datetime.fromtimestamp (epoch) - datetime.utcfromtimestamp (epoch)
+    return utc + offset
 
 @app.route('/data/now')
 def gnowdata():
@@ -46,7 +54,7 @@ def gnowdata():
 @app.route('/data/<range>/<yyyymmdd>')
 def ganydata(range, yyyymmdd):
     assert range in range_dates
-    day = datetime.strptime(yyyymmdd, '%Y%m%d')
+    day = datetime.utcnow()
     from_date, to_date = range_dates[range](day)
     sensor_data = {}
     labels = []
@@ -67,9 +75,9 @@ def ganydata(range, yyyymmdd):
         sensor_data[sensor_id]['humidities'].append(None)
 
     for d in database.iter_view_times(from_date, to_date, range):
-        labels.append(d.strftime('%Y%m%dT%H%M%S'))
+        labels.append(utc2local(d).strftime('%Y%m%dT%H%M%S'))
 
-    labels.append(datetime.now().strftime('%Y%m%dT%H%M%S'))
+    labels.append(utc2local(datetime.now()).strftime('%Y%m%dT%H%M%S'))
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 

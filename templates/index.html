@@ -15,19 +15,25 @@
 <div class="col s12">
 <div id="current"></div>
 <ul class="tabs">
-	<li class="tab col s3"><a href="#day">Day</a></li>
-	<li class="tab col s3"><a href="#week">Week</a></li>
-	<li class="tab col s3"><a href="#month">Month</a></li>
-	<li class="tab col s3"><a href="#all">All</a></li>
+	<li class="tab col s2"><a href="#hour">Hour</a></li>
+	<li class="tab col s2"><a href="#day">Day</a></li>
+	<li class="tab col s2"><a href="#week">Week</a></li>
+	<li class="tab col s2"><a href="#month">Month</a></li>
+	<li class="tab col s2"><a href="#year">Year</a></li>
+	<li class="tab col s2"><a href="#all">All</a></li>
 </ul>
 </div>
 </div>
 </header>
+<div id="hour" class="col s12">
+</div>
 <div id="day" class="col s12">
 </div>
 <div id="week" class="col s12">
 </div>
 <div id="month" class="col s12">
+</div>
+<div id="year" class="col s12">
 </div>
 <div id="all" class="col s12">
 </div>
@@ -53,7 +59,16 @@ function convertHex(hex, opacity){
     return result;
 }
 
-//var timeout;
+timeFormats = {
+    minute: 'H:mm',
+    hour: 'H:mm',
+    day: 'D MMM',
+    week: 'D MMM YYYY',
+    month: 'MMM YYYY',
+    quarter: 'MMM YYYY',
+    year: 'YYYY',
+}
+
 sensors = {
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
 '{{ sensor_id }}': {
@@ -152,6 +167,7 @@ window.myTempChart = new Chart(ctx, {
         scales: {
             xAxes: [{
                 type: 'time',
+                time: { displayFormats: timeFormats },
                 position: 'bottom',
             }],
             yAxes: [{
@@ -179,6 +195,7 @@ window.myHumChart = new Chart(ctx, {
         scales: {
             xAxes: [{
                 type: 'time',
+                time: { displayFormats: timeFormats },
                 position: 'bottom'
             }],
             yAxes: [{

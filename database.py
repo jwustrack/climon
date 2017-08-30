@@ -161,7 +161,7 @@ class Database(object):
     def get_stats_from_raw(self, sensor, view_range, view_times):
         logging.debug('Getting raw stats for %r' % view_times)
         interval = floor(view_ranges[view_range].total_seconds())
-        # we need to make datetime timesone unaware for the WHERE ... IN to work
+        # we need to make datetime timezone unaware for the WHERE ... IN to work
         view_times = [ t.replace(tzinfo=None) for t in view_times ]
         query = 'select datetime((strftime(\'%%s\', time) / ?) * ?, \'unixepoch\') as "interval [timestamp]", avg(temperature), min(temperature), max(temperature), avg(humidity), min(humidity), max(humidity) from climon where sensor = ? AND "interval [timestamp]" in (%s) group by "interval [timestamp]" order by "interval [timestamp]"' % ",".join(["?"]*len(view_times))
         logging.debug('Query %r args %r' % (query, [interval, interval, sensor] + view_times))
@@ -189,23 +189,27 @@ class Database(object):
     def get_stats(self, sensor, time_from, time_to, view_range):
         assert view_range in view_ranges
 
+        view_times = set(iter_view_times(time_from, time_to, view_range))
+
         # Don't attempt to get anything outside of the date range
-        logging.debug('Get datespan')
         minDate, maxDate = self.getDateSpan()
-        logging.debug('Get datespan: done')
+
+        null_view_times = [vtime for vtime in view_times if vtime < minDate or vtime > maxDate]
+        logging.debug('Null stats: %r' % null_view_times)
+
+        # Fill anything outside of what we have in DB with NULL values
+        rows = list(self.get_null_stats([vtime for vtime in view_times if vtime < minDate or vtime > maxDate]))
+    
         time_from = max(minDate, time_from)
         time_to = min(maxDate, time_to)
 
         cursor = self.db.execute('SELECT time [timestamp], temperature_avg, temperature_min, temperature_max, humidity_avg, humidity_min, humidity_max FROM climon_stats WHERE sensor = ? AND view_range = ? AND time >= ? AND time < ? ORDER BY time ASC', (sensor, view_range, time_from, time_to))
 
         stat_view_times = set()
-        rows = cursor.fetchall()
+        rows += cursor.fetchall()
         logging.debug('Found %d rows in stats table' % len(rows))
-        stat_view_times = self.get_view_times(rows)
-        logging.debug('Computed view times.')
 
-        view_times = set(iter_view_times(time_from, time_to, view_range))
-        missing_view_times = view_times - stat_view_times
+        missing_view_times = view_times - self.get_view_times(rows)
         if missing_view_times:
             logging.debug('Need to fetch raw stats for: %r' % missing_view_times)
             raw_rows = list(self.get_stats_from_raw(sensor, view_range, missing_view_times))
