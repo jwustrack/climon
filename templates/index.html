@@ -166,6 +166,7 @@ window.myTempChart = new Chart(ctx, {
         },
         scales: {
             xAxes: [{
+                ticks: {minRotation: 45},
                 type: 'time',
                 time: { displayFormats: timeFormats },
                 position: 'bottom',
@@ -194,6 +195,7 @@ window.myHumChart = new Chart(ctx, {
         },
         scales: {
             xAxes: [{
+                ticks: {minRotation: 45},
                 type: 'time',
                 time: { displayFormats: timeFormats },
                 position: 'bottom'
