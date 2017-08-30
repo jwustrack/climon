@@ -69,6 +69,8 @@ timeFormats = {
     year: 'YYYY',
 }
 
+graphUpdateTimeout=null;
+
 sensors = {
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
 '{{ sensor_id }}': {
@@ -238,27 +240,33 @@ function setCurrentTemp () {
 		window.myTempChart.update();
 		window.myHumChart.update();
 
-		setTimeout(setCurrentTemp, 10000);
+		setTimeout(setCurrentTemp, 10*000);
 	});
 }
-function showGraph(range) {
-	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
-        location.hash = '#' + range;
-        //window.myTempChart.data.datasets.forEach((dataset) => {
-        //    dataset.data = dataset.data.slice(-1);
-        //});
-        //window.myHumChart.data.datasets.forEach((dataset) => {
-        //    dataset.data = dataset.data.slice(-1);
-        //});
+function replaceAllButLast(aOld, aNew)
+{
+	return aNew.slice(0, -1).concat(aOld.slice(-1));
+}
 
-        window.myHumChart.data.labels = resp['labels'];
-        window.myTempChart.data.labels = resp['labels'];
+function showGraph(range) {
+	clearTimeout(graphUpdateTimeout);
+        if (location.hash != '#' + range) {
+            location.hash = '#' + range;
+	}
+	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
+        if (location.hash != '#' + range) {
+            // Old command, so ignore
+            return;
+        }
+
+        window.myHumChart.data.labels = replaceAllButLast(window.myHumChart.data.labels, resp['labels']);
+        window.myTempChart.data.labels = replaceAllButLast(window.myTempChart.data.labels, resp['labels']);
 
 	for (var key in resp['data'])
 	{
 	    window.myTempChart.data.datasets.forEach((dataset) => {
 		if (dataset.key == key) {
-		    dataset.data = resp['data'][key]['temperatures'];
+		    dataset.data = replaceAllButLast(dataset.data, resp['data'][key]['temperatures']);
 		}
 		if (dataset.key == key + '_min') {
 		    dataset.data = resp['data'][key]['temperatures_min'];
@@ -269,7 +277,7 @@ function showGraph(range) {
 	    });
 	    window.myHumChart.data.datasets.forEach((dataset) => {
 		if (dataset.key == key) {
-		    dataset.data = resp['data'][key]['humidities'];
+		    dataset.data = replaceAllButLast(dataset.data, resp['data'][key]['humidities']);
 		}
 		if (dataset.key == key + '_min') {
 		    dataset.data = resp['data'][key]['humidities_min'];
@@ -282,9 +290,8 @@ function showGraph(range) {
 	window.myTempChart.update();
 	window.myHumChart.update();
 
-	//clearTimeout(timeout);
 	// Update graph every minute
-        //timeout = setTimeout(function(){showGraph(range)}, 60*1000);
+        graphUpdateTimeout = setTimeout(function(){showGraph(range)}, 60*1000);
 	});
 }
 if (window.location.hash) {
@@ -297,7 +304,6 @@ if (window.location.hash) {
 $(document).ready(function() { 
 setCurrentTemp();
 $("ul.tabs").tabs({ onShow: function(tab) {
-	//clearTimeout(timeout);
 	showGraph(tab.attr('id'));
 } });
 })
