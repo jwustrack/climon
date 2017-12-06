@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from time import sleep
 import logging
 import sensors
-import database
+import db as database
 
 def sleep_since(since, seconds):
     '''
@@ -35,7 +35,7 @@ def main(conf_fname):
     conf = read_conf(conf_fname)
 
     if 'monitor-interval' in conf['common']:
-        db = database.Database(conf['common']['database'])
+        db = database.WriteDB(conf['common']['database'])
 
         while True:
             timestamp = datetime.utcnow()

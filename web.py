@@ -8,7 +8,7 @@ import json
 import sensors
 from conf import read as read_conf
 import logging
-import database
+import db as database
 
 app = flask.Flask(__name__)
 conf = None
@@ -17,7 +17,7 @@ def db():
     db = getattr(flask.g, 'db', None)
     if db is None:
         logging.info('Connecting to DB.')
-        flask.g.db = database.Database(conf['common']['database'])
+        flask.g.db = database.ReadDB(conf['common']['database'])
     return flask.g.db
 
 @app.teardown_appcontext
