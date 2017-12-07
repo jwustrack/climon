@@ -153,7 +153,7 @@ class WriteDB(DB):
 
     def set(self, sensor, timestamp, temperature, humidity):
         self.db.execute("INSERT INTO climon VALUES (?, ?, ?, ?)", (timestamp, sensor, temperature, humidity))
-        self.update_stats(timestamp)
+        self.update_stats(sensor, timestamp)
         self.commit()
 
     def update_view_stats(self, sensor, view_range, timestamps):
@@ -165,7 +165,7 @@ class WriteDB(DB):
     def update_stats(self, sensor, timestamp):
         for view_range in view_ranges:
             view_timestamp = round_datetime(timestamp, view_range)
-            stats = self.get_stats_from_raw(sensor, view_range, [view_timestamp])
+            stats = list(self.get_stats_from_raw(sensor, view_range, [view_timestamp]))
             self.set_stats(stats, sensor, view_range)
 
     def get_stats_from_raw(self, sensor, view_range, view_times):

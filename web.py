@@ -8,7 +8,7 @@ import json
 import sensors
 from conf import read as read_conf
 import logging
-import db as database
+import database
 
 app = flask.Flask(__name__)
 conf = None
@@ -47,12 +47,8 @@ def utc2local(utc):
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
     for sensor_id in sensors.iter_ids(conf):
-        try:
-            hum, temp = sensors.get_by_id(conf, sensor_id)()
-        except Exception:
-            pass
-        else:
-            sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
+        d, temp, hum = db().getLatest(sensor_id)
+        sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
     return json.dumps(sensor_data)
 
 @app.route('/data/<range>/<yyyymmdd>')

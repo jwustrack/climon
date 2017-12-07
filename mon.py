@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from time import sleep
 import logging
 import sensors
-import db as database
+import database
 
 def sleep_since(since, seconds):
     '''
