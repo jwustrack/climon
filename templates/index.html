@@ -253,7 +253,7 @@ function showGraph(range) {
         if (location.hash != '#' + range) {
             location.hash = '#' + range;
 	}
-	$.getJSON( "/data/" + range + "/{{date}}", function( resp ) {
+	$.getJSON( "/data/" + range, function( resp ) {
         if (location.hash != '#' + range) {
             // Old command, so ignore
             return;
