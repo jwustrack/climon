@@ -1,5 +1,5 @@
 import flask
-from flask import render_template
+from flask import render_template, current_app
 from datetime import datetime, timedelta
 import time
 from collections import defaultdict
@@ -14,15 +14,11 @@ app = flask.Flask(__name__)
 conf = None
 
 def get_db():
-    db = getattr(flask.g, 'db', None)
+    db = getattr(current_app, 'db', None)
     if db is None:
         logging.info('Connecting to DB.')
-        flask.g.db = database.ReadDB(conf['common']['database'])
-    return flask.g.db
-
-@app.teardown_appcontext
-def close_db(error):
-    logging.info('Closing DB: %s', error)
+        current_app.db = database.ReadDB(conf['common']['database'])
+    return current_app.db
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
@@ -98,6 +94,7 @@ def main(conf_fname, debug=False):
     logging.info('Reading conf')
     conf = read_conf(conf_fname)
     logging.info('Reading conf done')
+
     app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf['common']['port']))
 
 if __name__ == '__main__':

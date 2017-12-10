@@ -173,6 +173,14 @@ class WriteDB(DB):
             self.db.execute("CREATE TABLE climon (time timestamp, sensor,\
                         temperature, humidity,\
                         CONSTRAINT pk PRIMARY KEY (time, sensor))")
+
+            # Index for retrieving stats
+            self.db.execute("CREATE INDEX climon_stats_index ON climon_stats(sensor, view_range, time)")
+
+            # Index for get_date_span
+            self.db.execute("CREATE INDEX time_index ON climon(time)")
+
+            # Index for get_stats_from_raw
             self.db.execute("CREATE INDEX climon_index ON climon(sensor, time)")
             self.commit()
         except sqlite3.OperationalError:
