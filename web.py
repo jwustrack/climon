@@ -9,16 +9,18 @@ import sensors
 from conf import read as read_conf
 import logging
 import database
+import threading
 
 app = flask.Flask(__name__)
 conf = None
 
 def get_db():
-    db = getattr(current_app, 'db', None)
+    l = threading.local()
+    db = getattr(l, 'db', None)
     if db is None:
         logging.info('Connecting to DB.')
-        current_app.db = database.ReadDB(conf['common']['database'])
-    return current_app.db
+        l.db = database.ReadDB(conf['common']['database'])
+    return l.db
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
