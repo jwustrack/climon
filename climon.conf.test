@@ -1,7 +1,7 @@
 [common]
-database=climon.db.sample
+database=climon.db
 port=8765
-sensor-interval=0
+monitor-interval=1
 
 [sensor:sine]
 color=#5588bb
