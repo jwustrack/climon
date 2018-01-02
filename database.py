@@ -249,9 +249,7 @@ class WriteDB(DB):
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
-    #import sys
-    #logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    #db = WriteDB('climon.db')
-    #db.reindex()
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    db = WriteDB('climon.db')
+    db.reindex()

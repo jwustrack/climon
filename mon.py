@@ -25,7 +25,7 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
     except Exception as e:
         logging.exception('Error while reading sensor %s', sensor_id)
 
-def main(conf_fname):
+def main(conf_fname, debug=False):
     global conf
 
     logging.basicConfig(filename='climon.log',
@@ -68,3 +68,5 @@ if __name__ == '__main__':
         daemon.stop()
     elif 'restart' == sys.argv[1]:
         daemon.restart()
+    elif 'debug' == sys.argv[1]:
+        main('climon.conf', debug=True)
