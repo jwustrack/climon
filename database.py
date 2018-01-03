@@ -8,6 +8,7 @@ from datetime import timedelta as td
 from datetime import timezone as tz
 import logging
 from math import floor
+from utils import firsts, pack_by, append_each
 
 # Climon stores raw values in the climon table.
 # Other tables can be reconstructed from climon.
@@ -65,34 +66,7 @@ def null_stats(view_times):
      (2, None, None, None, None, None, None),
      (3, None, None, None, None, None, None)]
     '''
-    res = []
-    for view_time in view_times:
-        res.append((view_time, None, None, None, None, None, None))
-    return res
-
-def firsts(rows):
-    '''
-    Returns the set of first elements of all rows:
-
-    >>> sorted(firsts([(7, 1, 2),\
-        [5, 4, 0, 3],\
-        [8, 4],\
-        [5, 4]]))
-    [5, 7, 8]
-    '''
-    return set(r[0] for r in rows)
-
-def pack_by(l, n):
-    '''
-    Yields elements from l in successive lists of size n
-
-    >>> list(pack_by(list(range(10)), 3))
-    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
-    '''
-    rest = l
-    while rest:
-        curr, rest = rest[:n], rest[n:]
-        yield curr
+    return append_each(view_times, (None, None, None, None, None, None))
 
 class DB(object):
     'Base Database class'
