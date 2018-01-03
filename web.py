@@ -5,8 +5,7 @@ import time
 from collections import defaultdict
 import json
 
-import sensors
-from conf import read as read_conf
+from conf import Conf
 import logging
 import database
 import threading
@@ -19,12 +18,12 @@ def get_db():
     db = getattr(l, 'db', None)
     if db is None:
         logging.info('Connecting to DB.')
-        l.db = database.ReadDB(conf['common']['database'])
+        l.db = database.ReadDB(conf.raw['common']['database'])
     return l.db
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    temp, hum = sensors.get_by_id(conf, sensor_id)()
+    temp, hum = conf.get_element('sensor', sensor_id)()
     return '%f %f' % (temp, hum)
 
 RANGE_DATES = dict(
@@ -44,7 +43,7 @@ def utc2local(utc):
 @app.route('/data/now')
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
-    for sensor_id in sensors.iter_ids(conf):
+    for sensor_id in conf.iter_ids('sensor'):
         _, temp, hum = get_db().get_latest(sensor_id)
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
     return json.dumps(sensor_data)
@@ -57,7 +56,7 @@ def ganydata(view_range):
     sensor_data = {}
     labels = []
 
-    for sensor_id in sensors.iter_ids(conf):
+    for sensor_id in conf.iter_ids('sensor'):
         sensor_data[sensor_id] = defaultdict(lambda: [])
         logging.debug("Getting stats for %s", sensor_id)
         for d, avg_temp, min_temp, max_temp, avg_hum, min_hum, max_hum \
@@ -83,13 +82,13 @@ def ganydata(view_range):
 @app.route('/')
 def stats():
     timestamp = datetime.now()
-    sensor_confs = dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
+    sensor_confs = dict(conf.iter_sections('sensor'))
     return render_template('stats.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
 @app.route('/overview')
 def overview():
     timestamp = datetime.now()
-    sensor_confs = dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
+    sensor_confs = dict(conf.iter_sections('sensor'))
     return render_template('overview.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
 def main(conf_fname, debug=False):
@@ -100,10 +99,10 @@ def main(conf_fname, debug=False):
                         level=logging.DEBUG)
 
     logging.info('Reading conf')
-    conf = read_conf(conf_fname)
+    conf = Conf(conf_fname)
     logging.info('Reading conf done')
 
-    app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf['common']['port']))
+    app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf.raw['common']['port']))
 
 if __name__ == '__main__':
     import daemon

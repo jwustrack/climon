@@ -8,3 +8,9 @@ color=#5588bb
 name=sine
 type=sine
 source=null
+
+[toggle:fake]
+color=#558822
+name=fake
+type=fake
+source=null

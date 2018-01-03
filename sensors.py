@@ -1,14 +1,3 @@
-'''
-Accessors for the sensors defined in the configuration
-
->>> import conf
->>> c = conf.read('climon.conf.test')
->>> list(iter_ids(c))
-['sine']
->>> get_by_id(c, 'sine') # doctest: +ELLIPSIS
-functools.partial(<function sensor_sine... at ...>, 'null')
-'''
-
 from functools import partial
 
 def sensor_dht11(source):
@@ -64,23 +53,4 @@ SENSORS = {
     'CLIMON': sensor_climon,
     'RANDOM': sensor_random,
     'SINE': sensor_sine_factory(),
-        }
-
-def get_by_id(conf, sensor_id):
-    sensor_conf = conf['sensor:%s' % sensor_id]
-    sensor = SENSORS[sensor_conf['type'].upper()]
-    return partial(sensor, sensor_conf['source'])
-
-def iter_ids(conf):
-    for section in conf.sections():
-        if section.startswith('sensor:'):
-            _, sensor_id = section.split(':', 1)
-            yield sensor_id
-
-def iter(conf):
-    for sensor_id in iter_ids(conf):
-        yield sensor_id, get_by_id(conf, sensor_id)
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+}

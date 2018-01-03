@@ -1,6 +1,6 @@
 import datetime
 import time
-from conf import read as read_conf
+from conf import Conf
 from datetime import datetime, timedelta
 from time import sleep
 import logging
@@ -26,24 +26,22 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
         logging.exception('Error while reading sensor %s', sensor_id)
 
 def main(conf_fname, debug=False):
-    global conf
-
     logging.basicConfig(filename='climon.log',
             format='%(asctime)s %(levelname)s MON %(message)s',
             level=logging.DEBUG)
 
-    conf = read_conf(conf_fname)
+    conf = Conf(conf_fname)
 
-    if 'monitor-interval' in conf['common']:
-        db = database.WriteDB(conf['common']['database'])
+    if 'monitor-interval' in conf.raw['common']:
+        db = database.WriteDB(conf.raw['common']['database'])
 
         while True:
             timestamp = datetime.utcnow()
-            for sensor_id, sensor in sensors.iter(conf):
+            for sensor_id, sensor in conf.iter_elements('sensor'):
                 log_sensor_data(db, sensor_id, sensor, timestamp)
 
             logging.debug('Starting to sleep')
-            sleep_since(timestamp, int(conf['common']['monitor-interval']))
+            sleep_since(timestamp, int(conf.raw['common']['monitor-interval']))
 
         db.close()
     else:
