@@ -1,0 +1,40 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+
+<div class="container">
+<main>
+{% for sensor_id, sensor_conf in sensor_confs.items() %}
+<div class="card-panel">
+    <p style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}: <span id="sensor_{{sensor_id}}">temp</span></p>
+</div>
+{% endfor %}
+<script>
+function setCurrentTemp () {
+	$.getJSON( "/data/now", function( resp ) {
+		var s = "";
+		for (var sensor_id in resp['sensors'])
+		{
+            $("#sensor_" + sensor_id)[0].innerHTML = "" +
+				Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
+				Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%";
+		}
+		setTimeout(setCurrentTemp, 1*1000);
+	});
+}
+</script>
+<script>
+$(document).ready(function() {
+setCurrentTemp();
+})
+</script>
+</main>
+</div>
+</body>
+</html>

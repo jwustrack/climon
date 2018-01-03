@@ -81,10 +81,16 @@ def ganydata(view_range):
     return json.dumps(dict(labels=labels, data=sensor_data))
 
 @app.route('/')
-def index():
+def stats():
     timestamp = datetime.now()
     sensor_confs = dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
-    return render_template('index.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
+    return render_template('stats.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
+
+@app.route('/overview')
+def overview():
+    timestamp = datetime.now()
+    sensor_confs = dict((sensor_id, conf['sensor:%s' % sensor_id]) for sensor_id in sensors.iter_ids(conf))
+    return render_template('overview.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
 
 def main(conf_fname, debug=False):
     global conf
