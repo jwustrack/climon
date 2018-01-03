@@ -70,15 +70,22 @@ def null_stats(view_times):
         res.append((view_time, None, None, None, None, None, None))
     return res
 
-def get_view_times(rows):
-    view_times = set()
-    for row in rows:
-        time, _, _, _, _, _, _ = row
-        view_times.add(time)
-    return view_times
+def firsts(rows):
+    '''
+    Returns the set of first elements of all rows:
+
+    >>> sorted(firsts([(7, 1, 2),\
+        [5, 4, 0, 3],\
+        [8, 4],\
+        [5, 4]]))
+    [5, 7, 8]
+    '''
+    return set(r[0] for r in rows)
 
 def pack_by(l, n):
     '''
+    Yields elements from l in successive lists of size n
+
     >>> list(pack_by(list(range(10)), 3))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     '''
@@ -133,7 +140,7 @@ class ReadDB(DB):
         logging.debug('Found %d rows in stats table', len(rows))
 
         # Fill anything outside of what we have in DB with NULL values
-        rows += null_stats(view_times - get_view_times(rows))
+        rows += null_stats(view_times - firsts(rows))
 
         return sorted(rows, key=lambda r: r[0])
 
