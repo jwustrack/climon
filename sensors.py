@@ -40,7 +40,7 @@ def climon(source):
     return map(float, request.urlopen(source).read().split())
 
 @sensor
-def random(source):
+def rand(source):
     import random
     return random.random() * 100, random.random() * 50 - 15
 
@@ -73,6 +73,6 @@ SENSORS = {
     'DHT11': dht11,
     'DHT22': dht22,
     'CLIMON': climon,
-    'RANDOM': random,
+    'RANDOM': rand,
     'SINE': sine,
 }

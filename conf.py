@@ -17,7 +17,7 @@
 [('fake', <toggles.FakeToggle object at...>)]
 '''
 
-from functools import partial, lru_cache
+from functools import lru_cache
 
 from toggles import TOGGLES
 from sensors import SENSORS

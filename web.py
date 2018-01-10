@@ -1,5 +1,5 @@
 import flask
-from flask import render_template, current_app
+from flask import render_template
 from datetime import datetime, timedelta
 import time
 from collections import defaultdict
@@ -77,7 +77,7 @@ def ganydata(view_range):
             sensor_data[sensor_id]['humidities'].append(avg_hum)
             sensor_data[sensor_id]['humidities_min'].append(min_hum)
             sensor_data[sensor_id]['humidities_max'].append(max_hum)
-        logging.debug("Getting stats for %s: done" % sensor_id)
+        logging.debug("Getting stats for %s: done", sensor_id)
 
         sensor_data[sensor_id]['temperatures'].append(None)
         sensor_data[sensor_id]['humidities'].append(None)
@@ -93,14 +93,18 @@ def ganydata(view_range):
 def stats():
     timestamp = datetime.now()
     sensor_confs = dict(conf.iter_sections('sensor'))
-    return render_template('stats.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
+    return render_template('stats.html',
+            date=timestamp.strftime('%Y%m%d'),
+            sensor_confs=sensor_confs)
 
 @app.route('/overview')
 def overview():
     timestamp = datetime.now()
     sensor_confs = dict(conf.iter_sections('sensor'))
     toggle_confs = dict(conf.iter_sections('toggle'))
-    return render_template('overview.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs, toggle_confs=toggle_confs)
+    return render_template('overview.html',
+            date=timestamp.strftime('%Y%m%d'),
+            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
 def main(conf_fname, debug=False):
     global conf

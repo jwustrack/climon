@@ -156,7 +156,9 @@ class WriteDB(DB):
                         CONSTRAINT pk PRIMARY KEY (time, sensor))")
 
             # Index for retrieving stats
-            self.db.execute("CREATE INDEX climon_stats_index ON climon_stats(sensor, view_range, time)")
+            self.db.execute("\
+                    CREATE INDEX climon_stats_index\
+                        ON climon_stats(sensor, view_range, time)")
 
             # Index for get_date_span
             self.db.execute("CREATE INDEX time_index ON climon(time)")

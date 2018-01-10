@@ -1,10 +1,8 @@
 import datetime
-import time
 from conf import Conf
 from datetime import datetime, timedelta
 from time import sleep
 import logging
-import sensors
 import database
 
 def sleep_since(since, seconds):
@@ -22,7 +20,7 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
         hum, temp = sensor()
         logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
         db.set(sensor_id, timestamp, temp, hum)
-    except Exception as e:
+    except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 
 def main(conf_fname, debug=False):
