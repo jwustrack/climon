@@ -118,7 +118,7 @@ class Daemon:
 
         if pid and pid_exists(pid):
             sys.stderr.write("pidfile %s already exists and refers to a real process. Daemon already running?\n"
-                    % self.pidfile)
+                             % self.pidfile)
             sys.exit(1)
 
         # Start the daemon
@@ -139,7 +139,7 @@ class Daemon:
 
         if not pid:
             sys.stderr.write("pidfile %s does not exist. Daemon not running?\n"
-                    % self.pidfile)
+                             % self.pidfile)
             return # not an error during restart
 
         # Try killing the daemon process
@@ -175,8 +175,6 @@ class Daemon:
         """
 
 def main(pidfile, func, debug_func):
-    import sys
-
     class SimpleDaemon(Daemon):
 
         def run(self):

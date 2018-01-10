@@ -1,19 +1,24 @@
 '''
-A sensor is a callable constructed with a source parameter.
-The sensor decorator makes it possible to convert a simple function taking a source parameter into a sensor.
-
->>> @sensor
-... def test(source):
-...     return source * 2
-
->>> sensor = test('foo')
->>> sensor()
-'foofoo'
+A sensor is a callable taking no arguments,
+returning a humidity and a temperature.
+It is constructed with a `source' parameter.
 '''
 
 from functools import partial
 
 def sensor(func):
+    '''
+    The sensor decorator makes it possible to convert
+    a simple function taking a source parameter into a sensor.
+
+    >>> @sensor
+    ... def test(source):
+    ...     return source * 2
+
+    >>> sensor = test('foo')
+    >>> sensor()
+    'foofoo'
+    '''
     def func_wrapper(source):
         return partial(func, source)
     return func_wrapper

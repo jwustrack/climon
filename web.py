@@ -1,14 +1,15 @@
-import flask
-from flask import render_template
 from datetime import datetime, timedelta
 import time
 from collections import defaultdict
 import json
-
-from conf import Conf
 import logging
-import database
 import threading
+
+import database
+from conf import Conf
+
+import flask
+from flask import render_template
 
 app = flask.Flask(__name__)
 conf = None
@@ -94,8 +95,8 @@ def stats():
     timestamp = datetime.now()
     sensor_confs = dict(conf.iter_sections('sensor'))
     return render_template('stats.html',
-            date=timestamp.strftime('%Y%m%d'),
-            sensor_confs=sensor_confs)
+                           date=timestamp.strftime('%Y%m%d'),
+                           sensor_confs=sensor_confs)
 
 @app.route('/overview')
 def overview():
@@ -103,8 +104,8 @@ def overview():
     sensor_confs = dict(conf.iter_sections('sensor'))
     toggle_confs = dict(conf.iter_sections('toggle'))
     return render_template('overview.html',
-            date=timestamp.strftime('%Y%m%d'),
-            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
+                           date=timestamp.strftime('%Y%m%d'),
+                           sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
 def main(conf_fname, debug=False):
     global conf
@@ -123,7 +124,6 @@ if __name__ == '__main__':
     import daemon
     from functools import partial
 
-    daemon.main(
-            'web.pid',
-            partial(main, 'climon.conf'),
-            partial(main, 'climon.conf', debug=True))
+    daemon.main('web.pid',
+                partial(main, 'climon.conf'),
+                partial(main, 'climon.conf', debug=True))
