@@ -49,20 +49,9 @@ def main(conf_fname, debug=False):
 
 if __name__ == '__main__':
     import daemon
-    import sys
+    from functools import partial
 
-    class Daemon(daemon.Daemon):
-
-        def run(self):
-            main('climon.conf')
-
-    daemon = Daemon(pidfile='mon.pid')
-
-    if 'start' == sys.argv[1]:
-        daemon.start()
-    elif 'stop' == sys.argv[1]:
-        daemon.stop()
-    elif 'restart' == sys.argv[1]:
-        daemon.restart()
-    elif 'debug' == sys.argv[1]:
-        main('climon.conf', debug=True)
+    daemon.main(
+            'mon.pid',
+            partial(main, 'climon.conf'),
+            partial(main, 'climon.conf', debug=True))
