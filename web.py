@@ -40,6 +40,16 @@ def utc2local(utc):
     offset = datetime.fromtimestamp(epoch) - datetime.utcfromtimestamp(epoch)
     return utc + offset
 
+@app.route('/data/toggle/<toggle_id>/<state>')
+def settoggle(toggle_id, state):
+    toggle = conf.get_element('toggle', toggle_id)
+    toggle.set(json.loads(state))
+    return json.dumps(toggle.get())
+
+@app.route('/data/toggle/<toggle_id>')
+def gettoggle(toggle_id):
+    return json.dumps(conf.get_element('toggle', toggle_id).get())
+
 @app.route('/data/now')
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
@@ -89,7 +99,8 @@ def stats():
 def overview():
     timestamp = datetime.now()
     sensor_confs = dict(conf.iter_sections('sensor'))
-    return render_template('overview.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs)
+    toggle_confs = dict(conf.iter_sections('toggle'))
+    return render_template('overview.html', date=timestamp.strftime('%Y%m%d'), sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
 def main(conf_fname, debug=False):
     global conf

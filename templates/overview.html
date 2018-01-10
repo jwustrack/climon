@@ -10,26 +10,44 @@
 
 <div class="container">
 <main>
+
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
 <div class="card-panel">
-    <p style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}: <span id="sensor_{{sensor_id}}">temp</span></p>
+    <label style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}<span id="sensor_{{sensor_id}}" style="margin: 0 16px;">...</span></label>
 </div>
 {% endfor %}
+
+{% for toggle_id, toggle_conf in toggle_confs.items() %}
+<div class="card-panel">
+  <div class="switch">
+    <label style='color:{{ toggle_conf['color'] }}'>
+      {{ toggle_conf['name'] }}
+      <input type="checkbox" id="{{toggle_id}}" onchange="toggle(this)">
+      <span class="lever"></span>
+    </label>
+  </div>
+</div>
+{% endfor %}
+
 <script>
-function setCurrentTemp () {
-	$.getJSON( "/data/now", function( resp ) {
-		var s = "";
-		for (var sensor_id in resp['sensors'])
-		{
-            $("#sensor_" + sensor_id)[0].innerHTML = "" +
-				Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
-				Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%";
-		}
-		setTimeout(setCurrentTemp, 1*1000);
-	});
+function toggle(element) {
+    $.getJSON( "/data/toggle/" + element.id + "/" + element.checked,
+            function( resp ) {
+                element.checked = resp;
+            });
 }
-</script>
-<script>
+function setCurrentTemp () {
+    $.getJSON( "/data/now", function( resp ) {
+        var s = "";
+        for (var sensor_id in resp['sensors'])
+        {
+            $("#sensor_" + sensor_id)[0].innerHTML = "" +
+                Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
+                Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%";
+        }
+        setTimeout(setCurrentTemp, 1*1000);
+    });
+}
 $(document).ready(function() {
 setCurrentTemp();
 })

@@ -7,17 +7,17 @@
 ['fake']
 
 >>> c.get_element('sensor', 'sine') # doctest: +ELLIPSIS
-functools.partial(<function sensor_sine... at ...>, 'null')
->>> c.get_element('toggle', 'fake')
-functools.partial(<class 'toggles.FakeToggle'>, 'null')
+<function sine.<locals>.sine_sensor at ...>
+>>> c.get_element('toggle', 'fake') # doctest: +ELLIPSIS
+<toggles.FakeToggle object at ...>
 
 >>> list(c.iter_elements('sensor')) # doctest: +ELLIPSIS
-[('sine', functools.partial(<function sensor_sine... at ...>, 'null'))]
->>> list(c.iter_elements('toggle'))
-[('fake', functools.partial(<class 'toggles.FakeToggle'>, 'null'))]
+[('sine', <function sine... at ...>)]
+>>> list(c.iter_elements('toggle')) # doctest: +ELLIPSIS
+[('fake', <toggles.FakeToggle object at...>)]
 '''
 
-from functools import partial
+from functools import partial, lru_cache
 
 from toggles import TOGGLES
 from sensors import SENSORS
@@ -29,7 +29,7 @@ ELEMENTS = {
 
 def make_element(element_type, element_conf):
     element = ELEMENTS[element_type][element_conf['type'].upper()]
-    return partial(element, element_conf['source'])
+    return element(element_conf['source'])
 
 class Conf(object):
 
@@ -41,6 +41,7 @@ class Conf(object):
     def get_section(self, element_type, element_id):
         return self.raw['%s:%s' % (element_type, element_id)]
 
+    @lru_cache(maxsize=None)
     def get_element(self, element_type, element_id):
         return make_element(element_type, self.get_section(element_type, element_id))
 
@@ -55,5 +56,5 @@ class Conf(object):
             yield element_id, self.get_section(element_type, element_id)
 
     def iter_elements(self, element_type):
-        for element_id, section in self.iter_sections(element_type):
-            yield element_id, make_element(element_type, section)
+        for element_id in self.iter_ids(element_type):
+            yield element_id, self.get_element(element_type, element_id)
