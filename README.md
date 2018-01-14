@@ -4,9 +4,9 @@ Monitors DHT11 and DHT22 sensors connected to one or several Raspberry Pi(s) and
 
 ## Installation
 
-Get `git`, `python3` and the correspondong `pip`:
+Get `git`, `python3`, `pip` and `python3 rpi.gpio`:
 
-`$ sudo apt-get install git python3 python3-pip`
+`$ sudo apt-get install git python3 python3-pip python3-rpi.gpio`
 
 Install the DHT library using pip:
 
@@ -86,6 +86,52 @@ type=climon
 
 # Url on which sensor data is published by the other climon instance: http://<ip>:<port>/sensor/<sensor_id>
 source=http://192.168.1.102:8765/sensor/garden
+
+color=#ff3300
+```
+
+### toggle:* ###
+
+There is one configuration section per toggle you want to control. The part after the colon is the ID of the sensor. You can chose any ID as long as it's composed of alphanumeric characters and dashes (no spaces or other special characters).
+Once you have started using a toggle, don't change this ID or your data will become inaccessible.
+The content of each toggle section will configure the toggle.
+
+#### Relay connected to the raspberry pi itself ####
+
+```ini
+# Toggle with ID "heating"
+[toggle:heating]
+
+# Name of the sensor (displayed on the web interface)
+name=Bathroom heating
+
+# Type of toggle (relay)
+type=relay
+
+# Source: PIN number of the relay
+source=6
+
+# Color on the web interface
+color=#0033ff
+```
+#### Relay on a remote climon instance ####
+
+Each toggle will be published on a URL of the form:
+
+`http://<ip>:<port>/data/toggle/<sensor_id>`
+
+Thanks to this you can control toggles connected to other climon instances in and around your house. To use such a remote toggle, use a `climon` toggle type:
+
+
+```ini
+[toggle:garden-hose]
+name=Garden hose
+
+# Get values from a remote climon instance
+type=climon
+
+# Url on which the toggle is published by the other climon instance: http://<ip>:<port>/data/toggle/<toggle_id>
+source=http://192.168.1.102:8765/data/toggle/garden-hose
 
 color=#ff3300
 ```
