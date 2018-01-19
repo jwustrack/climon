@@ -19,11 +19,11 @@ class ClimonToggle(object):
     def set(self, state):
         from urllib import request
         value = '/true' if state else '/false'
-        return request.urlopen(source + value).read() == 'true'
+        return request.urlopen(self.url + value).read() == 'true'
 
-    def get(self, state):
+    def get(self):
         from urllib import request
-        return request.urlopen(source).read() == 'true'
+        return request.urlopen(self.url).read() == b'true'
 
 class RelayToggle(object):
 
