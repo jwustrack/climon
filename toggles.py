@@ -11,6 +11,20 @@ class FakeToggle(object):
     def get(self):
         return self.state
 
+class ClimonToggle(object):
+
+    def __init__(self, source):
+        self.url = source
+
+    def set(self, state):
+        from urllib import request
+        value = '/true' if state else '/false'
+        return request.urlopen(source + value).read() == 'true'
+
+    def get(self, state):
+        from urllib import request
+        return request.urlopen(source).read() == 'true'
+
 class RelayToggle(object):
 
     def __init__(self, source):
@@ -26,5 +40,6 @@ class RelayToggle(object):
 
 TOGGLES = {
     'FAKE': FakeToggle,
+    'CLIMON': ClimonToggle,
     'RELAY': RelayToggle,
 }
