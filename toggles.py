@@ -14,8 +14,8 @@ class FakeToggle(object):
 class RelayToggle(object):
 
     def __init__(self, source):
-        self.pin = source
-        GPIO.setmode(GPIO.BOARD)
+        self.pin = int(source)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
 
     def set(self, state):
