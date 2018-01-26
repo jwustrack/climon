@@ -33,10 +33,10 @@ class RelayToggle(object):
         GPIO.setup(self.pin, GPIO.OUT)
 
     def set(self, state):
-        GPIO.output(self.pin, state)
+        GPIO.output(self.pin, not state)
 
     def get(self):
-        return GPIO.input(self.pin) in (1, GPIO.HIGH, True)
+        return GPIO.input(self.pin) not in (1, GPIO.HIGH, True)
 
 TOGGLES = {
     'FAKE': FakeToggle,
