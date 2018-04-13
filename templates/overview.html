@@ -50,6 +50,12 @@ function setCurrentTemp () {
 }
 $(document).ready(function() {
 setCurrentTemp();
+{% for toggle_id in toggle_confs.keys() %}
+$.getJSON( "/data/toggle/{{toggle_id}}",
+    function( resp ) {
+	$("#{{toggle_id}}")[0].checked = resp;
+    });
+{% endfor %}
 })
 </script>
 </main>
