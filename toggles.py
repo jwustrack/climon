@@ -1,5 +1,3 @@
-import RPi.GPIO as GPIO
-
 class FakeToggle(object):
 
     def __init__(self, source):
@@ -14,6 +12,8 @@ class FakeToggle(object):
 class RelayToggle(object):
 
     def __init__(self, source):
+        import RPi.GPIO as GPIO
+
         self.pin = source
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.pin, GPIO.OUT)
