@@ -1,0 +1,25 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+  <nav class="nav-extended teal">
+    <div class="nav-wrapper">
+      <a href="/overview" class="brand-logo">Climon</a>
+      <ul id="nav-mobile" class="right">
+        <li><a href="/">Stats</a></li>
+      </ul>
+    </div>
+    {% block tabs %}{% endblock %}
+  </nav>
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
+</body>
+</html>

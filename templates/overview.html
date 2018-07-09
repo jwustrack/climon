@@ -1,24 +1,15 @@
-<html>
-<head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body>
-<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
-
-<div class="container">
+{% extends "base.html" %}
+{% block content %}
 <main>
-
+<ul class="collection">
 {% for sensor_id, sensor_conf in sensor_confs.items() %}
-<div class="card-panel">
-    <label style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}<span id="sensor_{{sensor_id}}" style="margin: 0 16px;">...</span></label>
-</div>
+<li class="collection-item flow-text">
+    <label style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}</label><p id="sensor_{{sensor_id}}" style="margin: 0 16px;">...</p>
+</li>
 {% endfor %}
 
 {% for toggle_id, toggle_conf in toggle_confs.items() %}
-<div class="card-panel">
+<li class="collection-item flow-text">
   <div class="switch">
     <label style='color:{{ toggle_conf['color'] }}'>
       {{ toggle_conf['name'] }}
@@ -26,9 +17,11 @@
       <span class="lever"></span>
     </label>
   </div>
-</div>
+</li>
 {% endfor %}
+</ul>
 
+</main>
 <script>
 function toggle(element) {
     $.getJSON( "/data/toggle/" + element.id + "/" + element.checked,
@@ -58,7 +51,4 @@ $.getJSON( "/data/toggle/{{toggle_id}}",
 {% endfor %}
 })
 </script>
-</main>
-</div>
-</body>
-</html>
+{% endblock content %}

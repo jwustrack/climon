@@ -107,6 +107,15 @@ def overview():
                            date=timestamp.strftime('%Y%m%d'),
                            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
+@app.route('/small')
+def small_overview():
+    timestamp = datetime.now()
+    sensor_confs = dict(conf.iter_sections('sensor'))
+    toggle_confs = dict(conf.iter_sections('toggle'))
+    return render_template('small.html',
+                           date=timestamp.strftime('%Y%m%d'),
+                           sensor_confs=sensor_confs, toggle_confs=toggle_confs)
+
 def main(conf_fname, debug=False):
     global conf
 

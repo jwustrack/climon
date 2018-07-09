@@ -1,29 +1,17 @@
-<html>
-<head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body>
-<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
-
-<div class="container">
-<header>
-<div class="row">
-<div class="col s12">
-<div id="current"></div>
-<ul class="tabs">
-	<li class="tab col s2"><a href="#hour">Hour</a></li>
-	<li class="tab col s2"><a href="#day">Day</a></li>
-	<li class="tab col s2"><a href="#week">Week</a></li>
-	<li class="tab col s2"><a href="#month">Month</a></li>
-	<li class="tab col s2"><a href="#year">Year</a></li>
-	<li class="tab col s2"><a href="#all">All</a></li>
-</ul>
-</div>
-</div>
-</header>
+{% extends "base.html" %}
+{% block tabs %}
+    <div class="nav-content">
+      <ul class="tabs tabs-transparent">
+<li class="tab col s2"><a href="#hour">Hour</a></li>
+<li class="tab col s2"><a href="#day">Day</a></li>
+<li class="tab col s2"><a href="#week">Week</a></li>
+<li class="tab col s2"><a href="#month">Month</a></li>
+<li class="tab col s2"><a href="#year">Year</a></li>
+<li class="tab col s2"><a href="#all">All</a></li>
+      </ul>
+    </div>
+{% endblock tabs %}
+{% block content %}
 <div id="hour" class="col s12">
 </div>
 <div id="day" class="col s12">
@@ -37,16 +25,18 @@
 <div id="all" class="col s12">
 </div>
 <main>
-<div class="card-panel">
+<ul class="collection">
+<li class="collection-item">
 <div style="height: 200px;">
 <canvas id="tempChart" style="height: 200px"></canvas>
 </div>
-</div>
-<div class="card-panel">
+</li>
+<li class="collection-item">
 <div style="height: 200px;">
 <canvas id="humChart" style="height: 200px"></canvas>
 </div>
-</div>
+</li>
+</ul>
 <script>
 function convertHex(hex, opacity){
     hex = hex.replace('#','');
@@ -215,14 +205,14 @@ window.myHumChart = new Chart(ctx, {
 });
 function setCurrentTemp () {
 	$.getJSON( "/data/now", function( resp ) {
-		var s = "";
-		for (var sensor_id in resp['sensors'])
-		{
-			s += "<span style='color:" + sensors[sensor_id]['color'] + "'>" + sensors[sensor_id]['name'] + ": <strong>" +
-				Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
-				Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%</strong></span><br/>";
-		}
-		$("#current")[0].innerHTML = s;
+		//var s = "";
+		//for (var sensor_id in resp['sensors'])
+		//{
+		//	s += "<span style='color:" + sensors[sensor_id]['color'] + "'>" + sensors[sensor_id]['name'] + ": <strong>" +
+		//		Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
+		//		Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%</strong></span><br/>";
+		//}
+		//$("#current")[0].innerHTML = s;
 
 
 		window.myTempChart.data.datasets.forEach((dataset) => {
@@ -308,6 +298,4 @@ $("ul.tabs").tabs({ onShow: function(tab) {
 })
 </script>
 </main>
-</div>
-</body>
-</html>
+{% endblock content %}
