@@ -1,5 +1,3 @@
-import RPi.GPIO as GPIO
-
 class FakeToggle(object):
 
     def __init__(self, source):
@@ -28,6 +26,8 @@ class ClimonToggle(object):
 class RelayToggle(object):
 
     def __init__(self, source):
+        import RPi.GPIO as GPIO
+
         self.pin = int(source)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
