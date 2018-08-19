@@ -6,13 +6,14 @@ import logging
 import threading
 
 import database
-from conf import Conf
+from conf import Conf, ParsedConf
 
 import flask
 from flask import render_template
 
 app = flask.Flask(__name__)
 conf = None
+pconf = None
 
 def get_db():
     l = threading.local()
@@ -101,11 +102,9 @@ def stats():
 @app.route('/overview')
 def overview():
     timestamp = datetime.now()
-    sensor_confs = dict(conf.iter_sections('sensor'))
-    toggle_confs = dict(conf.iter_sections('toggle'))
     return render_template('overview.html',
                            date=timestamp.strftime('%Y%m%d'),
-                           sensor_confs=sensor_confs, toggle_confs=toggle_confs)
+                           conf=pconf)
 
 @app.route('/small')
 def small_overview():
@@ -117,7 +116,7 @@ def small_overview():
                            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
 def main(conf_fname, debug=False):
-    global conf
+    global conf, pconf
 
     logging.basicConfig(filename='climon.log',
                         format='%(asctime)s %(levelname)s WEB %(message)s',
@@ -125,6 +124,8 @@ def main(conf_fname, debug=False):
 
     logging.info('Reading conf')
     conf = Conf(conf_fname)
+    pconf = ParsedConf(conf_fname)
+    print(pconf.groups)
     logging.info('Reading conf done')
 
     app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf.raw['common']['port']))

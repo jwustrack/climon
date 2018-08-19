@@ -1,26 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
+{% for group, elements in conf.groups %}
+    <h5 style='color:{{group['color']}}'>{{ group['name'] }}</h5>
+    <div class='row'>
+    {% for element_id, element in elements %}
+        <div class='col s12 m6 l4'>
+        <p>
+        {% if element['element_type'] == 'sensor' %}
+        <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
+        {% elif element['element_type'] == 'toggle' %}
+          <span>{{ element['name'] }}</span>
+            <div class="switch">
+              <label>
+                  <!--<span>{{ element['name'] }}</span>-->
+                <input type="checkbox" id="{{element['id']}}" onchange="toggle(this)">
+                <span class="lever"></span>
+              </label>
+            </div>
+        {% endif %}
+        </p>
+        </div>
+    {% endfor %}
+    </div>
+{% endfor %}
+
 <main>
-<ul class="collection">
-{% for sensor_id, sensor_conf in sensor_confs.items() %}
-<li class="collection-item flow-text">
-    <label style='color:{{ sensor_conf['color'] }}'>{{ sensor_conf['name'] }}</label><p id="sensor_{{sensor_id}}" style="margin: 0 16px;">...</p>
-</li>
-{% endfor %}
-
-{% for toggle_id, toggle_conf in toggle_confs.items() %}
-<li class="collection-item flow-text">
-  <div class="switch">
-    <label style='color:{{ toggle_conf['color'] }}'>
-      {{ toggle_conf['name'] }}
-      <input type="checkbox" id="{{toggle_id}}" onchange="toggle(this)">
-      <span class="lever"></span>
-    </label>
-  </div>
-</li>
-{% endfor %}
-</ul>
-
 </main>
 <script>
 function toggle(element) {
@@ -43,7 +47,7 @@ function setCurrentTemp () {
 }
 $(document).ready(function() {
 setCurrentTemp();
-{% for toggle_id in toggle_confs.keys() %}
+{% for toggle_id in conf.toggles.keys() %}
 $.getJSON( "/data/toggle/{{toggle_id}}",
     function( resp ) {
 	$("#{{toggle_id}}")[0].checked = resp;
