@@ -23,7 +23,7 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
     except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 
-def main(conf_fname, debug=False):
+def run(conf_fname, debug=False):
     logging.basicConfig(filename='climon.log',
                         format='%(asctime)s %(levelname)s MON %(message)s',
                         level=logging.DEBUG)
@@ -46,11 +46,3 @@ def main(conf_fname, debug=False):
         logging.debug('Monitor is idle.')
         while True:
             sleep(60)
-
-if __name__ == '__main__':
-    import daemon
-    from functools import partial
-
-    daemon.main('mon.pid',
-                partial(main, 'climon.conf'),
-                partial(main, 'climon.conf', debug=True))

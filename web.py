@@ -115,7 +115,7 @@ def small_overview():
                            date=timestamp.strftime('%Y%m%d'),
                            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
-def main(conf_fname, debug=False):
+def run(conf_fname, debug=False):
     global conf, pconf
 
     logging.basicConfig(filename='climon.log',
@@ -129,11 +129,3 @@ def main(conf_fname, debug=False):
     logging.info('Reading conf done')
 
     app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf.raw['common']['port']))
-
-if __name__ == '__main__':
-    import daemon
-    from functools import partial
-
-    daemon.main('web.pid',
-                partial(main, 'climon.conf'),
-                partial(main, 'climon.conf', debug=True))

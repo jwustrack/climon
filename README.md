@@ -138,53 +138,25 @@ color=#ff3300
 
 ## Usage
 
-Once its dependencies are installed and climon.conf is fully configured, you can start the deamon.
+Once its dependencies are installed and climon.conf is fully configured, you can start climon:
 ```sh
-$ ./climon.sh start
+$ ( ./climon.py & )
 ```
 
 And access the web interface:
 
 `http://<ip>:<port>`
 
-Configuration changes will be taken into account only after restarting the deamon:
-
-```sh
-$ ./climon.sh restart
-```
-You can also stop it:
-
-```sh
-$ ./climon.sh stop
-```
-For debugging purposes you can start the web UI and monitoring processes individually:
-
-```sh
-$ python3 web.py debug
-```
-or
-```sh
-$ python3 mon.py debug
-```
-
-## Autostart
-
-To run `climon` during the boot process, run:
-
-```sh
-sudo ./tools/autostart.sh
-```
-
 ## Upgrades
 
 To upgrade climon to the latest git HEAD, run the following commands:
 
 ```sh
-./climon stop
+kill <climon_pid>
 git pull
 cp climon.db climon.db.bckp.`date +%s`
 ./tools/clean_db.sh climon.db
-./climon start
+( python3 climon.py & )
 ```
 
 This creates a backup file of the climon DB in `climon.db.XXXXXXXXXX`.
