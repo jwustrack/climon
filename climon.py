@@ -1,12 +1,14 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import mon
 import web
 
 def main(conf_fname, debug=False):
-    monp = Process(target=mon.run, args=(conf_fname, debug))
+    sensor_queue = Queue()
+
+    monp = Process(target=mon.run, args=(conf_fname, sensor_queue, debug))
     monp.start()
 
-    web.run(conf_fname, debug)
+    web.run(conf_fname, sensor_queue, debug)
 
     monp.join()
 

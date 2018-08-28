@@ -91,6 +91,24 @@ def ganydata(view_range):
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 
+@app.route('/set/<sensor_id>/temperature/<temperature>/')
+def settemp(sensor_id, temperature):
+    squeue.put({
+        'sensor_id': sensor_id,
+        'timestamp': datetime.utcnow(),
+        'temperature': temperature
+        })
+    return 'ok'
+
+@app.route('/set/<sensor_id>/humidity/<humidity>/')
+def sethum(sensor_id, humidity):
+    squeue.put({
+        'sensor_id': sensor_id,
+        'timestamp': datetime.utcnow(),
+        'humidity': humidity
+        })
+    return 'ok'
+
 @app.route('/')
 def stats():
     timestamp = datetime.now()
@@ -115,8 +133,10 @@ def small_overview():
                            date=timestamp.strftime('%Y%m%d'),
                            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
-def run(conf_fname, debug=False):
-    global conf, pconf
+def run(conf_fname, sensor_queue, debug=False):
+    global conf, pconf, squeue
+
+    squeue = sensor_queue
 
     logging.basicConfig(filename='climon.log',
                         format='%(asctime)s %(levelname)s WEB %(message)s',

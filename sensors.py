@@ -8,8 +8,8 @@ from functools import partial
 
 def sensor(func):
     '''
-    The sensor decorator makes it possible to convert
-    a simple function taking a source parameter into a sensor.
+    The sensor decorator converts a function
+    taking a source parameter into a sensor.
 
     >>> @sensor
     ... def test(source):
@@ -74,10 +74,17 @@ def sine(source):
         return round(40*(y+.3), 2), round(100*(y+.5), 2)
     return sine_sensor
 
+def empty(source):
+    class EmptySensor(object):
+        pass
+
+    return EmptySensor()
+
 SENSORS = {
     'DHT11': dht11,
     'DHT22': dht22,
     'CLIMON': climon,
     'RANDOM': rand,
     'SINE': sine,
+    'WEB': empty
 }

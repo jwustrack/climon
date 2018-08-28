@@ -10,6 +10,13 @@ type=sine
 source=null
 group=all
 
+[sensor:web]
+color=#bb8855
+name=web
+type=web
+source=null
+group=all
+
 [toggle:fake]
 color=#558822
 name=fake

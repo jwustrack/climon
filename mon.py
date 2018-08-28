@@ -15,6 +15,9 @@ def sleep_since(since, seconds):
         sleep(.5)
 
 def log_sensor_data(db, sensor_id, sensor, timestamp):
+    if not callable(sensor):
+        return
+
     try:
         logging.debug('Reading sensor %s', sensor_id)
         hum, temp = sensor()
@@ -23,7 +26,7 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
     except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 
-def run(conf_fname, debug=False):
+def run(conf_fname, sensor_queue, debug=False):
     logging.basicConfig(filename='climon.log',
                         format='%(asctime)s %(levelname)s MON %(message)s',
                         level=logging.DEBUG)
@@ -37,6 +40,15 @@ def run(conf_fname, debug=False):
             timestamp = datetime.utcnow()
             for sensor_id, sensor in conf.iter_elements('sensor'):
                 log_sensor_data(db, sensor_id, sensor, timestamp)
+
+            while not sensor_queue.empty():
+                try:
+                    item = sensor_queue.get_nowait()
+                    db.set(item['sensor_id'], item['timestamp'],
+                            item.get('temperature', None),
+                            item.get('humidity', None))
+                except Queue.Empty:
+                    break
 
             logging.debug('Starting to sleep')
             sleep_since(timestamp, int(conf.raw['common']['monitor-interval']))
