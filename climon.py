@@ -13,4 +13,4 @@ def main(conf_fname, debug=False):
     monp.join()
 
 if __name__ == '__main__':
-    main('climon.conf', debug=True)
+    main('climon.conf', debug=False)

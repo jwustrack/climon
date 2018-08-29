@@ -163,7 +163,7 @@ def run(conf_fname, sensor_queue, debug=False):
     squeue = sensor_queue
 
     logging.basicConfig(filename='climon.log',
-                        format='%(asctime)s %(levelname)s WEB %(message)s',
+                        format='%(asctime)s %(levelname)s WEB[%(process)d/%(thread)d] %(message)s',
                         level=logging.DEBUG)
 
     logging.info('Reading conf')

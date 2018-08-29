@@ -30,7 +30,7 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
 
 def run(conf_fname, sensor_queue, debug=False):
     logging.basicConfig(filename='climon.log',
-                        format='%(asctime)s %(levelname)s MON %(message)s',
+                        format='%(asctime)s %(levelname)s MON[%(process)d/%(thread)d] %(message)s',
                         level=logging.DEBUG)
 
     conf = Conf(conf_fname)
