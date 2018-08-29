@@ -156,20 +156,37 @@ class WriteDB(DB):
                         time timestamp, sensor, view_range,\
                         metric, avg_value, min_value, max_value,\
                         CONSTRAINT pk PRIMARY KEY (time, sensor, view_range, metric)) WITHOUT ROWID")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
             self.db.execute("CREATE TABLE climon (time timestamp, sensor,\
                         metric, value,\
                         CONSTRAINT pk PRIMARY KEY (time, sensor, metric)) WITHOUT ROWID")
+        except sqlite3.OperationalError:
+            pass
 
+        try:
             # Index for retrieving stats
             self.db.execute("\
                     CREATE INDEX climon_stats_index\
                         ON climon_stats(sensor, view_range, time)")
+        except sqlite3.OperationalError:
+            pass
 
+        try:
             # Index for get_date_span
             self.db.execute("CREATE INDEX time_index ON climon(time)")
+        except sqlite3.OperationalError:
+            pass
 
+        try:
             # Index for get_stats_from_raw
             self.db.execute("CREATE INDEX climon_index ON climon(sensor, time)")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
             self.commit()
         except sqlite3.OperationalError:
             pass
