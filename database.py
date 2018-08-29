@@ -61,12 +61,19 @@ def iter_view_times(time_from, time_to, view_range):
 def null_stats(view_times):
     '''
     >>> null_stats(range(4)) # doctest: +NORMALIZE_WHITESPACE
-    [(0, None, None, None, None, None, None),
-     (1, None, None, None, None, None, None),
-     (2, None, None, None, None, None, None),
-     (3, None, None, None, None, None, None)]
+    [(0, None, None, None, None),
+     (1, None, None, None, None),
+     (2, None, None, None, None),
+     (3, None, None, None, None)]
     '''
-    return append_each(view_times, (None, None, None, None, None, None))
+    return append_each(view_times, (None, None, None, None))
+
+from enum import Enum, unique
+
+@unique
+class Metrics(Enum):
+    TEMPERATURE = 0
+    HUMIDITY = 1
 
 class DB(object):
     'Base Database class'
@@ -84,7 +91,7 @@ class ReadDB(DB):
     def get(self, sensor, time_from, time_to):
         logging.debug('Getting data for sensor %r from %r to %r', sensor, time_from, time_to)
         cursor = self.db.execute('\
-                SELECT time, temperature, humidity\
+                SELECT time, metric, value\
                 FROM climon\
                 WHERE sensor = ? AND time >= ? AND time < ?\
                 ORDER BY time ASC', (sensor, time_from, time_to))
@@ -103,9 +110,8 @@ class ReadDB(DB):
         time_to = min(db_time_to, time_to)
 
         cursor = self.db.execute('\
-                SELECT time [timestamp],\
-                    temperature_avg, temperature_min, temperature_max,\
-                    humidity_avg, humidity_min, humidity_max\
+                SELECT time [timestamp], metric,\
+                    avg_value, min_value, max_value\
                 FROM climon_stats\
                 WHERE sensor = ? AND view_range = ? AND time >= ? AND time < ?\
                 ORDER BY time ASC', (sensor, view_range, time_from, time_to))
@@ -118,12 +124,12 @@ class ReadDB(DB):
 
         return sorted(rows, key=lambda r: r[0])
 
-    def get_latest(self, sensor):
-        cursor = self.db.execute('SELECT time, temperature, humidity\
+    def get_latest(self, sensor, metric):
+        cursor = self.db.execute('SELECT time, value\
                 FROM climon\
-                WHERE sensor = ?\
+                WHERE sensor = ? AND metric = ?\
                 ORDER BY time desc\
-                LIMIT 1', (sensor,))
+                LIMIT 1', (sensor, metric.value))
         return cursor.fetchone()
 
     def get_date_span(self):
@@ -148,12 +154,11 @@ class WriteDB(DB):
             self.db.execute("\
                     CREATE TABLE climon_stats (\
                         time timestamp, sensor, view_range,\
-                        temperature_avg, temperature_min, temperature_max,\
-                        humidity_avg, humidity_min, humidity_max,\
-                        CONSTRAINT pk PRIMARY KEY (time, sensor, view_range))")
+                        metric, avg_value, min_value, max_value,\
+                        CONSTRAINT pk PRIMARY KEY (time, sensor, view_range, metric)) WITHOUT ROWID")
             self.db.execute("CREATE TABLE climon (time timestamp, sensor,\
-                        temperature, humidity,\
-                        CONSTRAINT pk PRIMARY KEY (time, sensor))")
+                        metric, value,\
+                        CONSTRAINT pk PRIMARY KEY (time, sensor, metric)) WITHOUT ROWID")
 
             # Index for retrieving stats
             self.db.execute("\
@@ -169,9 +174,9 @@ class WriteDB(DB):
         except sqlite3.OperationalError:
             pass
 
-    def set(self, sensor, timestamp, temperature, humidity):
+    def set(self, sensor, timestamp, metric, value):
         self.db.execute("INSERT INTO climon VALUES (?, ?, ?, ?)",
-                        (timestamp, sensor, temperature, humidity))
+                        (timestamp, sensor, metric.value, value))
         self.update_stats(sensor, timestamp)
         self.commit()
 
@@ -195,11 +200,10 @@ class WriteDB(DB):
         for view_times in pack_by(view_times, 9999):
             query = '\
                     SELECT datetime((strftime(\'%%s\', time) / ?) * ?, \'unixepoch\') as "interval [timestamp]",\
-                        avg(temperature), min(temperature), max(temperature),\
-                        avg(humidity), min(humidity), max(humidity)\
+                        metric, avg(value), min(value), max(value)\
                     FROM climon\
                     WHERE sensor = ? AND "interval [timestamp]" in (%s)\
-                    GROUP BY "interval [timestamp]"\
+                    GROUP BY "interval [timestamp]", metric\
                     ORDER BY "interval [timestamp]"' % ",".join(["?"]*len(view_times))
             logging.debug('Query %r args %r', query, [interval, interval, sensor] + view_times)
             cursor = self.db.execute(query, [interval, interval, sensor] + view_times)
@@ -211,9 +215,8 @@ class WriteDB(DB):
             logging.debug('INSERT %r %r %r', sensor, view_range, rows)
             self.db.executemany('\
                     INSERT OR REPLACE INTO climon_stats (sensor, view_range, time,\
-                        temperature_avg, temperature_min, temperature_max,\
-                        humidity_avg, humidity_min, humidity_max)\
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        metric, avg_value, min_value, max_value)\
+                    VALUES (?, ?, ?, ?, ?, ?, ?)',
                                 [[sensor, view_range] + list(r) for r in rows])
 
     def reindex(self):

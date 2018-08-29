@@ -52,11 +52,19 @@ def settoggle(toggle_id, state):
 def gettoggle(toggle_id):
     return json.dumps(conf.get_element('toggle', toggle_id).get())
 
+def get_recent_value(time_value):
+    if time_value is None:
+        return '-' % (time_value,)
+    if datetime.utcnow() - time_value[0] > timedelta(seconds=120):
+        return '(old: %r)' % (datetime.utcnow() - time_value[0],)
+    return time_value[1]
+
 @app.route('/data/now')
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
     for sensor_id in conf.iter_ids('sensor'):
-        _, temp, hum = get_db().get_latest(sensor_id)
+        temp = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.TEMPERATURE))
+        hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.HUMIDITY))
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
     return json.dumps(sensor_data)
 
@@ -71,14 +79,28 @@ def ganydata(view_range):
     for sensor_id in conf.iter_ids('sensor'):
         sensor_data[sensor_id] = defaultdict(lambda: [])
         logging.debug("Getting stats for %s", sensor_id)
-        for d, avg_temp, min_temp, max_temp, avg_hum, min_hum, max_hum \
+        for d, metric, avg_val, min_val, max_val \
                 in get_db().get_stats(sensor_id, from_date, to_date, view_range):
-            sensor_data[sensor_id]['temperatures'].append(avg_temp)
-            sensor_data[sensor_id]['temperatures_min'].append(min_temp)
-            sensor_data[sensor_id]['temperatures_max'].append(max_temp)
-            sensor_data[sensor_id]['humidities'].append(avg_hum)
-            sensor_data[sensor_id]['humidities_min'].append(min_hum)
-            sensor_data[sensor_id]['humidities_max'].append(max_hum)
+            if metric is None:
+                sensor_data[sensor_id]['temperatures'].append(avg_val)
+                sensor_data[sensor_id]['temperatures_min'].append(min_val)
+                sensor_data[sensor_id]['temperatures_max'].append(max_val)
+                sensor_data[sensor_id]['humidities'].append(avg_val)
+                sensor_data[sensor_id]['humidities_min'].append(min_val)
+                sensor_data[sensor_id]['humidities_max'].append(max_val)
+                continue
+
+            metric = database.Metrics(metric)
+            if metric == database.Metrics.TEMPERATURE:
+                sensor_data[sensor_id]['temperatures'].append(avg_val)
+                sensor_data[sensor_id]['temperatures_min'].append(min_val)
+                sensor_data[sensor_id]['temperatures_max'].append(max_val)
+            elif metric == database.Metrics.HUMIDITY:
+                sensor_data[sensor_id]['humidities'].append(avg_val)
+                sensor_data[sensor_id]['humidities_min'].append(min_val)
+                sensor_data[sensor_id]['humidities_max'].append(max_val)
+            else:
+                logging.error("Unknown metric: %r", metric)
         logging.debug("Getting stats for %s: done", sensor_id)
 
         sensor_data[sensor_id]['temperatures'].append(None)
@@ -96,7 +118,8 @@ def settemp(sensor_id, temperature):
     squeue.put({
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
-        'temperature': temperature
+        'metric': database.Metrics.TEMPERATURE,
+        'value': temperature
         })
     return 'ok'
 
@@ -105,7 +128,8 @@ def sethum(sensor_id, humidity):
     squeue.put({
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
-        'humidity': humidity
+        'metric': database.Metrics.HUMIDITY,
+        'value': humidity
         })
     return 'ok'
 

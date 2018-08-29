@@ -2,7 +2,7 @@
 >>> c = Conf('climon.conf.test')
 
 >>> list(c.iter_ids('sensor'))
-['sine']
+['sine', 'web']
 >>> list(c.iter_ids('toggle'))
 ['fake']
 

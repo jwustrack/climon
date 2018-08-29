@@ -4,6 +4,7 @@ import logging
 
 from conf import Conf
 import database
+import queue
 
 def sleep_since(since, seconds):
     '''
@@ -22,7 +23,8 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
         logging.debug('Reading sensor %s', sensor_id)
         hum, temp = sensor()
         logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
-        db.set(sensor_id, timestamp, temp, hum)
+        db.set(sensor_id, timestamp, database.Metrics.TEMPERATURE, temp)
+        db.set(sensor_id, timestamp, database.Metrics.HUMIDITY, hum)
     except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 
@@ -44,10 +46,8 @@ def run(conf_fname, sensor_queue, debug=False):
             while not sensor_queue.empty():
                 try:
                     item = sensor_queue.get_nowait()
-                    db.set(item['sensor_id'], item['timestamp'],
-                            item.get('temperature', None),
-                            item.get('humidity', None))
-                except Queue.Empty:
+                    db.set(item['sensor_id'], item['timestamp'], item['metric'], item['value'])
+                except queue.Empty:
                     break
 
             logging.debug('Starting to sleep')
