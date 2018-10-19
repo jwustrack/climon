@@ -45,8 +45,8 @@ def utc2local(utc):
 @app.route('/data/toggle/<toggle_id>/<state>')
 def settoggle(toggle_id, state):
     toggle = conf.get_element('toggle', toggle_id)
-    toggle.set(json.loads(state))
-    return json.dumps(toggle.get())
+    new_state = toggle.set(json.loads(state))
+    return json.dumps(new_state)
 
 @app.route('/data/toggle/<toggle_id>')
 def gettoggle(toggle_id):
