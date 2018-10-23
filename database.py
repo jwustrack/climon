@@ -214,16 +214,17 @@ class WriteDB(DB):
         interval = floor(VIEW_RANGES[view_range].total_seconds())
         # we need to make datetime timezone unaware for the WHERE ... IN to work
         view_times = [t.replace(tzinfo=None) for t in view_times]
+        min_time = min(view_times)
         for view_times in pack_by(view_times, 9999):
             query = '\
                     SELECT datetime((strftime(\'%%s\', time) / ?) * ?, \'unixepoch\') as "interval [timestamp]",\
                         metric, avg(value), min(value), max(value)\
                     FROM climon\
-                    WHERE sensor = ? AND "interval [timestamp]" in (%s)\
+                    WHERE sensor = ? AND time > ? AND "interval [timestamp]" in (%s)\
                     GROUP BY "interval [timestamp]", metric\
                     ORDER BY "interval [timestamp]"' % ",".join(["?"]*len(view_times))
-            logging.debug('Query %r args %r', query, [interval, interval, sensor] + view_times)
-            cursor = self.db.execute(query, [interval, interval, sensor] + view_times)
+            logging.debug('Query %r args %r', query, [interval, interval, sensor, min_time] + view_times)
+            cursor = self.db.execute(query, [interval, interval, sensor, min_time] + view_times)
             for row in cursor:
                 yield row
 
