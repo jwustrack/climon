@@ -39,6 +39,8 @@ def run(conf_fname, sensor_queue, debug=False):
         db = database.WriteDB(conf.raw['common']['database'])
 
         while True:
+            logging.debug('Queue size: %d', sensor_queue.qsize())
+
             timestamp = datetime.utcnow()
             for sensor_id, sensor in conf.iter_elements('sensor'):
                 log_sensor_data(db, sensor_id, sensor, timestamp)
@@ -46,8 +48,10 @@ def run(conf_fname, sensor_queue, debug=False):
             while not sensor_queue.empty():
                 try:
                     item = sensor_queue.get_nowait()
+                    logging.debug('db.set(%r, %r, %r, %r)', item['sensor_id'], item['timestamp'], item['metric'], item['value'])
                     db.set(item['sensor_id'], item['timestamp'], item['metric'], item['value'])
                 except queue.Empty:
+                    logging.debug('empty sensor_queue')
                     break
 
             logging.debug('Starting to sleep')

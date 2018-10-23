@@ -55,7 +55,7 @@ def gettoggle(toggle_id):
 def get_recent_value(time_value):
     if time_value is None:
         return '-' % (time_value,)
-    if datetime.utcnow() - time_value[0] > timedelta(seconds=120):
+    if datetime.utcnow() - time_value[0] > timedelta(seconds=10*60):
         return '(old: %r)' % (datetime.utcnow() - time_value[0],)
     return time_value[1]
 
@@ -113,8 +113,15 @@ def ganydata(view_range):
 
     return json.dumps(dict(labels=labels, data=sensor_data))
 
-@app.route('/set/<sensor_id>/temperature/<temperature>/')
+@app.route('/set/<sensor_id>/temperature/<temperature>')
 def settemp(sensor_id, temperature):
+    logging.debug('Put to queue: %r' % {
+        'sensor_id': sensor_id,
+        'timestamp': datetime.utcnow(),
+        'metric': database.Metrics.TEMPERATURE,
+        'value': temperature
+        })
+    logging.debug('Queue size: %d', squeue.qsize())
     squeue.put({
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
@@ -123,7 +130,7 @@ def settemp(sensor_id, temperature):
         })
     return 'ok'
 
-@app.route('/set/<sensor_id>/humidity/<humidity>/')
+@app.route('/set/<sensor_id>/humidity/<humidity>')
 def sethum(sensor_id, humidity):
     squeue.put({
         'sensor_id': sensor_id,
