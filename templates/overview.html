@@ -10,7 +10,21 @@
         <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
         {% elif element['element_type'] == 'toggle' %}
           <span>{{ element['name'] }}</span>
-            <div class="switch">
+	  <div class="preloader-wrapper small active" id="{{element['id']}}_preloader">
+	    <div class="spinner-layer spinner-green-only">
+	      <div class="circle-clipper left">
+		<div class="circle"></div>
+	      </div><div class="gap-patch">
+		<div class="circle"></div>
+	      </div><div class="circle-clipper right">
+		<div class="circle"></div>
+	      </div>
+	    </div>
+	  </div>
+            <div id="{{element['id']}}_reload" style="display: none">
+            <i class="material-icons" onclick="loadToggle('{{element['id']}}')">refresh</i>
+            </div>
+            <div class="switch" id="{{element['id']}}_switch" style="display: none">
               <label>
                   <!--<span>{{ element['name'] }}</span>-->
                 <input type="checkbox" id="{{element['id']}}" onchange="toggle(this)">
@@ -45,13 +59,23 @@ function setCurrentTemp () {
         setTimeout(setCurrentTemp, 1*1000);
     });
 }
+function loadToggle(toggle_id) {
+    $.getJSON( "/data/toggle/" + toggle_id, function( resp ) {
+        if (resp == true || resp == false) {
+            $("#" + toggle_id + "_preloader")[0].style = 'display: none';
+            $("#" + toggle_id + "_reload")[0].style = 'display: none';
+            $("#" + toggle_id + "_switch")[0].style = '';
+            $("#" + toggle_id)[0].checked = resp;
+	} else {
+            $("#" + toggle_id + "_preloader")[0].style = 'display: none';
+            $("#" + toggle_id + "_reload")[0].style = '';
+        }
+    });
+}
 $(document).ready(function() {
 setCurrentTemp();
 {% for toggle_id in conf.toggles.keys() %}
-$.getJSON( "/data/toggle/{{toggle_id}}",
-    function( resp ) {
-	$("#{{toggle_id}}")[0].checked = resp;
-    });
+    loadToggle("{{toggle_id}}");
 {% endfor %}
 })
 </script>

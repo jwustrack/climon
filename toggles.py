@@ -28,6 +28,7 @@ class FakeToggle(object):
 
     def set(self, state):
         self.state = bool(state)
+        return self.state
 
     def get(self):
         return self.state
@@ -54,11 +55,17 @@ class EspEasyToggle(object):
     def set(self, state):
         value = '1' if state else '0'
         url = '%s/control?cmd=GPIO,%s,%s' % (self.url, self.gpio, value)
-        return url_json_get(url)['state'] == 1
+        res = url_json_get(url)
+        if res is None:
+            raise ValueError()
+        return res['state'] == 1
 
     def get(self):
         url = '%s/control?cmd=Status,GPIO,%s' % (self.url, self.gpio)
-        return url_json_get(url)['state'] == 1
+        res = url_json_get(url)
+        if res is None:
+            raise ValueError()
+        return res['state'] == 1
 
 class RelayToggle(object):
 
@@ -73,11 +80,23 @@ class RelayToggle(object):
         import RPi.GPIO as GPIO
 
         GPIO.output(self.pin, state)
+        return self.get()
 
     def get(self):
         import RPi.GPIO as GPIO
 
         return GPIO.input(self.pin) in (1, GPIO.HIGH, True)
+
+class InvertedToggle(object):
+
+    def __init__(self, otherToggle):
+        self.toggle = otherToggle
+
+    def set(self, state):
+        return not self.toggle.set(not state)
+
+    def get(self):
+        return not self.toggle.get()
 
 TOGGLES = {
     'FAKE': FakeToggle,

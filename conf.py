@@ -19,7 +19,7 @@
 
 from functools import lru_cache
 
-from toggles import TOGGLES
+from toggles import TOGGLES, InvertedToggle
 from sensors import SENSORS
 
 ELEMENTS = {
@@ -27,9 +27,11 @@ ELEMENTS = {
     'sensor': SENSORS,
 }
 
-def make_element(element_type, element_conf):
+def new_element(element_type, element_conf):
     make_element = ELEMENTS[element_type][element_conf['type'].upper()]
     element = make_element(element_conf['source'])
+    if element_type == 'toggle' and element_conf.get('invert', None) == 'true':
+        element = InvertedToggle(element)
     element.conf = element_conf
     element.conf['element_type'] = element_type
     return element
@@ -49,7 +51,7 @@ class Conf(object):
 
     @lru_cache(maxsize=None)
     def get_element(self, element_type, element_id):
-        return make_element(element_type, self.get_section(element_type, element_id))
+        return new_element(element_type, self.get_section(element_type, element_id))
 
     def iter_ids(self, element_type):
         for section in self.raw.sections():

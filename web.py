@@ -50,7 +50,10 @@ def settoggle(toggle_id, state):
 
 @app.route('/data/toggle/<toggle_id>')
 def gettoggle(toggle_id):
-    return json.dumps(conf.get_element('toggle', toggle_id).get())
+    try:
+        return json.dumps(conf.get_element('toggle', toggle_id).get())
+    except Exception:
+        return json.dumps('?')
 
 def get_recent_value(time_value):
     if time_value is None:
