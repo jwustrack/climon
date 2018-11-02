@@ -10,7 +10,7 @@
         <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
         {% elif element['element_type'] == 'toggle' %}
           <span>{{ element['name'] }}</span>
-	  <div class="preloader-wrapper small active" id="{{element['id']}}_preloader">
+	  <div class="preloader-wrapper small active" id="{{element['id']}}_preloader" style="display: none">
 	    <div class="spinner-layer spinner-green-only">
 	      <div class="circle-clipper left">
 		<div class="circle"></div>
@@ -21,7 +21,7 @@
 	      </div>
 	    </div>
 	  </div>
-            <div id="{{element['id']}}_reload" style="display: none">
+            <div id="{{element['id']}}_reload">
             <i class="material-icons" onclick="loadToggle('{{element['id']}}')">refresh</i>
             </div>
             <div class="switch" id="{{element['id']}}_switch" style="display: none">
@@ -41,12 +41,14 @@
 <main>
 </main>
 <script>
+
 function toggle(element) {
     $.getJSON( "/data/toggle/" + element.id + "/" + element.checked,
             function( resp ) {
                 element.checked = resp;
             });
 }
+
 function setCurrentTemp () {
     $.getJSON( "/data/now", function( resp ) {
         var s = "";
@@ -59,24 +61,37 @@ function setCurrentTemp () {
         setTimeout(setCurrentTemp, 1*1000);
     });
 }
-function loadToggle(toggle_id) {
+
+function loadToggle(toggle_id, load_others) {
+    $("#" + toggle_id + "_preloader")[0].style = '';
+    $("#" + toggle_id + "_reload")[0].style = 'display: none';
     $.getJSON( "/data/toggle/" + toggle_id, function( resp ) {
         if (resp == true || resp == false) {
-            $("#" + toggle_id + "_preloader")[0].style = 'display: none';
-            $("#" + toggle_id + "_reload")[0].style = 'display: none';
-            $("#" + toggle_id + "_switch")[0].style = '';
+            $("#" + toggle_id + "_preloader").hide();
+            $("#" + toggle_id + "_reload").hide();
+            $("#" + toggle_id + "_switch").show();
             $("#" + toggle_id)[0].checked = resp;
 	} else {
-            $("#" + toggle_id + "_preloader")[0].style = 'display: none';
-            $("#" + toggle_id + "_reload")[0].style = '';
+            $("#" + toggle_id + "_preloader").hide();
+            $("#" + toggle_id + "_reload").show();
+        }
+        if (load_others) {
+            loadToggles();
         }
     });
 }
+
+function loadToggles() {
+    // Load toggle states in series (not parallel) to avoid overloading esp easy
+    remainingToggles = $("input:checkbox:hidden");
+    if (remainingToggles) {
+        loadToggle(remainingToggles[0].id, true);
+    }
+}
+
 $(document).ready(function() {
 setCurrentTemp();
-{% for toggle_id in conf.toggles.keys() %}
-    loadToggle("{{toggle_id}}");
-{% endfor %}
+loadToggles();
 })
 </script>
 {% endblock content %}
