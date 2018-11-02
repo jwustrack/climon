@@ -21,9 +21,6 @@
 	      </div>
 	    </div>
 	  </div>
-            <div id="{{element['id']}}_reload">
-            <i class="material-icons" onclick="loadToggle('{{element['id']}}')">refresh</i>
-            </div>
             <div class="switch" id="{{element['id']}}_switch" style="display: none">
               <label>
                   <!--<span>{{ element['name'] }}</span>-->
@@ -49,7 +46,7 @@ function toggle(element) {
             });
 }
 
-function setCurrentTemp () {
+function updateAll() {
     $.getJSON( "/data/now", function( resp ) {
         var s = "";
         for (var sensor_id in resp['sensors'])
@@ -58,40 +55,18 @@ function setCurrentTemp () {
                 Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
                 Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%";
         }
-        setTimeout(setCurrentTemp, 1*1000);
-    });
-}
-
-function loadToggle(toggle_id, load_others) {
-    $("#" + toggle_id + "_preloader")[0].style = '';
-    $("#" + toggle_id + "_reload")[0].style = 'display: none';
-    $.getJSON( "/data/toggle/" + toggle_id, function( resp ) {
-        if (resp == true || resp == false) {
+        for (var toggle_id in resp['toggles'])
+        {
             $("#" + toggle_id + "_preloader").hide();
-            $("#" + toggle_id + "_reload").hide();
             $("#" + toggle_id + "_switch").show();
-            $("#" + toggle_id)[0].checked = resp;
-	} else {
-            $("#" + toggle_id + "_preloader").hide();
-            $("#" + toggle_id + "_reload").show();
+            $("#" + toggle_id)[0].checked = resp['toggles'][toggle_id];
         }
-        if (load_others) {
-            loadToggles();
-        }
+        setTimeout(updateAll, 5*1000);
     });
-}
-
-function loadToggles() {
-    // Load toggle states in series (not parallel) to avoid overloading esp easy
-    remainingToggles = $("input:checkbox:hidden");
-    if (remainingToggles) {
-        loadToggle(remainingToggles[0].id, true);
-    }
 }
 
 $(document).ready(function() {
-setCurrentTemp();
-loadToggles();
+updateAll();
 })
 </script>
 {% endblock content %}

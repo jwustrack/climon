@@ -19,7 +19,6 @@ def get_db():
     l = threading.local()
     db = getattr(l, 'db', None)
     if db is None:
-        logging.info('Connecting to DB.')
         l.db = database.ReadDB(conf.raw['common']['database'])
     return l.db
 
@@ -46,6 +45,12 @@ def utc2local(utc):
 def settoggle(toggle_id, state):
     toggle = conf.get_element('toggle', toggle_id)
     new_state = toggle.set(json.loads(state))
+    squeue.put({
+        'sensor_id': toggle_id,
+        'timestamp': datetime.utcnow(),
+        'metric': database.Metrics.TOGGLE,
+        'value': new_state
+        })
     return json.dumps(new_state)
 
 @app.route('/data/toggle/<toggle_id>')
@@ -64,11 +69,14 @@ def get_recent_value(time_value):
 
 @app.route('/data/now')
 def gnowdata():
-    sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={})
+    sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={}, toggles={})
     for sensor_id in conf.iter_ids('sensor'):
         temp = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.TEMPERATURE))
         hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.HUMIDITY))
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
+    for toggle_id in conf.iter_ids('toggle'):
+        state = get_recent_value(get_db().get_latest(toggle_id, database.Metrics.TOGGLE))
+        sensor_data['toggles'][toggle_id] = state
     return json.dumps(sensor_data)
 
 @app.route('/data/<view_range>')

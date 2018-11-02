@@ -74,6 +74,7 @@ from enum import Enum, unique
 class Metrics(Enum):
     TEMPERATURE = 0
     HUMIDITY = 1
+    TOGGLE = 2
 
 class DB(object):
     'Base Database class'
@@ -194,7 +195,6 @@ class WriteDB(DB):
     def set(self, sensor, timestamp, metric, value):
         self.db.execute("INSERT INTO climon VALUES (?, ?, ?, ?)",
                         (timestamp, sensor, metric.value, value))
-        self.update_stats(sensor, timestamp)
         self.commit()
 
     def update_view_stats(self, sensor, view_range, timestamps):
@@ -249,11 +249,11 @@ class WriteDB(DB):
 
             for view_range in VIEW_RANGES:
                 self.update_view_stats(sensor, view_range, timestamps)
-        self.commit()
+                self.commit()
 
 
 if __name__ == '__main__':
     import sys
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     db = WriteDB('climon.db')
     db.reindex()
