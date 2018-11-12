@@ -62,7 +62,7 @@ def gettoggle(toggle_id):
 
 def get_recent_value(time_value):
     if time_value is None:
-        return '-' % (time_value,)
+        return '-'
     if datetime.utcnow() - time_value[0] > timedelta(seconds=10*60):
         return '(old: %r)' % (datetime.utcnow() - time_value[0],)
     return time_value[1]
@@ -71,8 +71,8 @@ def get_recent_value(time_value):
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={}, toggles={})
     for sensor_id in conf.iter_ids('sensor'):
-        temp = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.TEMPERATURE))
-        hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.HUMIDITY))
+        temp = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.temperature))
+        hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.humidity))
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
     for toggle_id in conf.iter_ids('toggle'):
         state = get_recent_value(get_db().get_latest(toggle_id, database.Metrics.TOGGLE))
@@ -90,32 +90,24 @@ def ganydata(view_range):
     for sensor_id in conf.iter_ids('sensor'):
         sensor_data[sensor_id] = defaultdict(lambda: [])
         logging.debug("Getting stats for %s", sensor_id)
-        for d, metric, avg_val, min_val, max_val \
-                in get_db().get_stats(sensor_id, from_date, to_date, view_range):
+        stats = get_db().get_stats(sensor_id, from_date, to_date, view_range)
+        metrics = set(database.Metrics(metric).name for (_, metric, _, _, _) in stats if metric is not None)
+        for d, metric, avg_val, min_val, max_val in stats:
             if metric is None:
-                sensor_data[sensor_id]['temperatures'].append(avg_val)
-                sensor_data[sensor_id]['temperatures_min'].append(min_val)
-                sensor_data[sensor_id]['temperatures_max'].append(max_val)
-                sensor_data[sensor_id]['humidities'].append(avg_val)
-                sensor_data[sensor_id]['humidities_min'].append(min_val)
-                sensor_data[sensor_id]['humidities_max'].append(max_val)
+                for m in metrics:
+                    sensor_data[sensor_id][m].append(None)
+                    sensor_data[sensor_id][m + '_min'].append(None)
+                    sensor_data[sensor_id][m + '_max'].append(None)
                 continue
 
-            metric = database.Metrics(metric)
-            if metric == database.Metrics.TEMPERATURE:
-                sensor_data[sensor_id]['temperatures'].append(avg_val)
-                sensor_data[sensor_id]['temperatures_min'].append(min_val)
-                sensor_data[sensor_id]['temperatures_max'].append(max_val)
-            elif metric == database.Metrics.HUMIDITY:
-                sensor_data[sensor_id]['humidities'].append(avg_val)
-                sensor_data[sensor_id]['humidities_min'].append(min_val)
-                sensor_data[sensor_id]['humidities_max'].append(max_val)
-            else:
-                logging.error("Unknown metric: %r", metric)
+            m = database.Metrics(metric).name
+            sensor_data[sensor_id][m].append(avg_val)
+            sensor_data[sensor_id][m + '_min'].append(min_val)
+            sensor_data[sensor_id][m + '_max'].append(max_val)
         logging.debug("Getting stats for %s: done", sensor_id)
 
-        sensor_data[sensor_id]['temperatures'].append(None)
-        sensor_data[sensor_id]['humidities'].append(None)
+        for m in metrics:
+            sensor_data[sensor_id][m].append(None)
 
     for d in database.iter_view_times(from_date, to_date, view_range):
         labels.append(utc2local(d).strftime('%Y%m%dT%H%M%S'))
@@ -129,14 +121,14 @@ def settemp(sensor_id, temperature):
     logging.debug('Put to queue: %r' % {
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
-        'metric': database.Metrics.TEMPERATURE,
+        'metric': database.Metrics.temperature,
         'value': temperature
         })
     logging.debug('Queue size: %d', squeue.qsize())
     squeue.put({
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
-        'metric': database.Metrics.TEMPERATURE,
+        'metric': database.Metrics.temperature,
         'value': temperature
         })
     return 'ok'
@@ -146,7 +138,7 @@ def sethum(sensor_id, humidity):
     squeue.put({
         'sensor_id': sensor_id,
         'timestamp': datetime.utcnow(),
-        'metric': database.Metrics.HUMIDITY,
+        'metric': database.Metrics.humidity,
         'value': humidity
         })
     return 'ok'

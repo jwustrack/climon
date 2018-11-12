@@ -72,9 +72,9 @@ from enum import Enum, unique
 
 @unique
 class Metrics(Enum):
-    TEMPERATURE = 0
-    HUMIDITY = 1
-    TOGGLE = 2
+    temperature = 0
+    humidity = 1
+    toggle = 2
 
 class DB(object):
     'Base Database class'

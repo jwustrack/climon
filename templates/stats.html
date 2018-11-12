@@ -2,28 +2,22 @@
 {% block tabs %}
     <div class="nav-content">
       <ul class="tabs tabs-transparent">
-<li class="tab col s2"><a href="#hour">Hour</a></li>
-<li class="tab col s2"><a href="#day">Day</a></li>
-<li class="tab col s2"><a href="#week">Week</a></li>
-<li class="tab col s2"><a href="#month">Month</a></li>
-<li class="tab col s2"><a href="#year">Year</a></li>
-<li class="tab col s2"><a href="#all">All</a></li>
+	<li class="tab col s2"><a href="#hour">Hour</a></li>
+	<li class="tab col s2"><a href="#day">Day</a></li>
+	<li class="tab col s2"><a href="#week">Week</a></li>
+	<li class="tab col s2"><a href="#month">Month</a></li>
+	<li class="tab col s2"><a href="#year">Year</a></li>
+	<li class="tab col s2"><a href="#all">All</a></li>
       </ul>
     </div>
 {% endblock tabs %}
 {% block content %}
-<div id="hour" class="col s12">
-</div>
-<div id="day" class="col s12">
-</div>
-<div id="week" class="col s12">
-</div>
-<div id="month" class="col s12">
-</div>
-<div id="year" class="col s12">
-</div>
-<div id="all" class="col s12">
-</div>
+<div id="hour" class="col s12"></div>
+<div id="day" class="col s12"></div>
+<div id="week" class="col s12"></div>
+<div id="month" class="col s12"></div>
+<div id="year" class="col s12"></div>
+<div id="all" class="col s12"></div>
 <main>
 <ul class="collection">
 <li class="collection-item">
@@ -48,6 +42,50 @@ function convertHex(hex, opacity){
     return result;
 }
 
+function createDatasets(sensors) {
+    datasets = []
+    for (var key in sensors)
+    {
+	    datasets.push(
+		{
+		    label: sensors[key]['name'] + '_min',
+		    pointRadius: 0,
+		    borderWidth: 1,
+		    data: [],
+		    backgroundColor: sensors[key]['bgColor'],
+		    borderColor: sensors[key]['bgColor'],
+		    key: key + '_min',
+		    fill: '+2',
+		}
+	    );
+	    datasets.push(
+		{
+		    label: sensors[key]['name'],
+		    pointRadius: 0,
+		    borderWidth: 2,
+		    data: [],
+		    backgroundColor: "rgba(0, 0, 0, 0)",
+		    borderColor: sensors[key]['color'],
+		    key: key,
+		    fill: false,
+		}
+	    );
+	    datasets.push(
+		{
+		    label: sensors[key]['name'] + '_max',
+		    pointRadius: 0,
+		    borderWidth: 1,
+		    data: [],
+		    backgroundColor: sensors[key]['bgColor'],
+		    borderColor: sensors[key]['bgColor'],
+		    key: key + '_max',
+		    fill: false,
+		}
+	    );
+    }
+    return datasets;
+}
+
 timeFormats = {
     minute: 'H:mm',
     hour: 'D MMM, H:mm',
@@ -56,6 +94,38 @@ timeFormats = {
     month: 'MMM YYYY',
     quarter: 'MMM YYYY',
     year: 'YYYY',
+}
+
+function createChart(context, label, sensors)
+{
+    return new Chart(context, {
+        type: 'line',
+        data: {
+            datasets: createDatasets(sensors)
+        },
+        options: {
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [{
+                    ticks: {minRotation: 45},
+                    type: 'time',
+                    time: { displayFormats: timeFormats },
+                    position: 'bottom',
+                }],
+                yAxes: [{
+                  scaleLabel: {
+                    display: true,
+                    labelString: label,
+                  }
+                }]
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false
+        }
+    });
 }
 
 graphUpdateTimeout=null;
@@ -69,169 +139,27 @@ sensors = {
         },
 {% endfor %}
 };
-humData=[];
-tempData=[];
-for (var key in sensors)
-{
-    tempData.push(
-        {
-            label: sensors[key]['name'] + '_min',
-            pointRadius: 0,
-            borderWidth: 1,
-            data: [],
-            backgroundColor: sensors[key]['bgColor'],
-            borderColor: sensors[key]['bgColor'],
-            key: key + '_min',
-            fill: '+2',
-        }
-    );
-    tempData.push(
-        {
-            label: sensors[key]['name'],
-            pointRadius: 0,
-            borderWidth: 2,
-            data: [],
-            backgroundColor: "rgba(0, 0, 0, 0)",
-            borderColor: sensors[key]['color'],
-            key: key,
-            fill: false,
-        }
-    );
-    tempData.push(
-        {
-            label: sensors[key]['name'] + '_max',
-            pointRadius: 0,
-            borderWidth: 1,
-            data: [],
-            backgroundColor: sensors[key]['bgColor'],
-            borderColor: sensors[key]['bgColor'],
-            key: key + '_max',
-            fill: false,
-        }
-    );
-    humData.push(
-        {
-            label: sensors[key]['name'] + '_min',
-            pointRadius: 0,
-            borderWidth: 1,
-            data: [],
-            backgroundColor: sensors[key]['bgColor'],
-            borderColor: sensors[key]['bgColor'],
-            key: key + '_min',
-            fill: '+2',
-        }
-    );
-    humData.push(
-        {
-            label: sensors[key]['name'],
-            pointRadius: 0,
-            borderWidth: 2,
-            data: [],
-            backgroundColor: "rgba(0,0,0,0)",
-            borderColor: sensors[key]['color'],
-            key: key,
-        }
-    );
-    humData.push(
-        {
-            label: sensors[key]['name'] + '_max',
-            pointRadius: 0,
-            borderWidth: 1,
-            data: [],
-            backgroundColor: sensors[key]['bgColor'],
-            borderColor: sensors[key]['bgColor'],
-            key: key + '_max',
-            fill: false,
-        }
-    );
-}
-var ctx = $("#tempChart");
-window.myTempChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        datasets: tempData
-    },
-    options: {
-        legend: {
-            display: false
-        },
-        scales: {
-            xAxes: [{
-                ticks: {minRotation: 45},
-                type: 'time',
-                time: { displayFormats: timeFormats },
-                position: 'bottom',
-            }],
-            yAxes: [{
-              scaleLabel: {
-                display: true,
-                labelString: 'Temperature °C'
-              }
-            }]
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false
-    }
-});
-var ctx = $("#humChart");
-window.myHumChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        datasets: humData
-    },
-    options: {
-        legend: {
-            display: false
-        },
-        scales: {
-            xAxes: [{
-                ticks: {minRotation: 45},
-                type: 'time',
-                time: { displayFormats: timeFormats },
-                position: 'bottom'
-            }],
-            yAxes: [{
-              scaleLabel: {
-                display: true,
-                labelString: 'Humidity %'
-              }
-            }]
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false
-    }
-});
-function setCurrentTemp () {
+
+window.charts = {}
+window.charts['temperature'] = createChart($('#tempChart'), 'Temperature C', sensors);
+window.charts['humidity'] = createChart($('#humChart'), 'Humidity %', sensors);
+
+function updateAll () {
 	$.getJSON( "/data/now", function( resp ) {
-		//var s = "";
-		//for (var sensor_id in resp['sensors'])
-		//{
-		//	s += "<span style='color:" + sensors[sensor_id]['color'] + "'>" + sensors[sensor_id]['name'] + ": <strong>" +
-		//		Math.round(10*resp['sensors'][sensor_id]["temperature"])/10 + "°C " +
-		//		Math.round(10*resp['sensors'][sensor_id]["humidity"])/10 + "%</strong></span><br/>";
-		//}
-		//$("#current")[0].innerHTML = s;
-
-
-		window.myTempChart.data.datasets.forEach((dataset) => {
+            for (var key in window.charts) {
+		window.charts[key].data.datasets.forEach((dataset) => {
 		    if (dataset.key in resp['sensors'])
-			    dataset.data[dataset.data.length - 1] = resp['sensors'][dataset.key]["temperature"];
+			    dataset.data[dataset.data.length - 1] = resp['sensors'][dataset.key][key];
 		});
-		window.myHumChart.data.datasets.forEach((dataset) => {
-		    if (dataset.key in resp['sensors'])
-			    dataset.data[dataset.data.length - 1] = resp['sensors'][dataset.key]["humidity"];
-		});
-		window.myHumChart.data.labels[window.myHumChart.data.labels.length - 1] = resp['now'];
-		window.myTempChart.data.labels[window.myTempChart.data.labels.length - 1] = resp['now'];
+		window.charts[key].data.labels[window.charts[key].data.labels.length - 1] = resp['now'];
 
-		window.myTempChart.update();
-		window.myHumChart.update();
+		window.charts[key].update();
+	     }
 
-		setTimeout(setCurrentTemp, 10*1000);
+	     setTimeout(updateAll, 10*1000);
 	});
 }
+
 function replaceAllButLast(aOld, aNew)
 {
 	return aNew.slice(0, -1).concat(aOld.slice(-1));
@@ -243,44 +171,33 @@ function showGraph(range) {
             location.hash = '#' + range;
 	}
 	$.getJSON( "/data/" + range, function( resp ) {
-        if (location.hash != '#' + range) {
-            // Old command, so ignore
-            return;
-        }
+		if (location.hash != '#' + range) {
+		    // Old command, so ignore
+		    return;
+		}
 
-        window.myHumChart.data.labels = replaceAllButLast(window.myHumChart.data.labels, resp['labels']);
-        window.myTempChart.data.labels = replaceAllButLast(window.myTempChart.data.labels, resp['labels']);
+		for (var sensor_type in window.charts) {
+			window.charts[sensor_type].data.labels = replaceAllButLast(window.charts[sensor_type].data.labels, resp['labels']);
 
-	for (var key in resp['data'])
-	{
-	    window.myTempChart.data.datasets.forEach((dataset) => {
-		if (dataset.key == key) {
-		    dataset.data = replaceAllButLast(dataset.data, resp['data'][key]['temperatures']);
+			for (var key in resp['data'])
+			{
+			    window.charts[sensor_type].data.datasets.forEach((dataset) => {
+				if (dataset.key == key) {
+				    dataset.data = replaceAllButLast(dataset.data, resp['data'][key][sensor_type]);
+				}
+				if (dataset.key == key + '_min') {
+				    dataset.data = resp['data'][key][sensor_type + '_min'];
+				}
+				if (dataset.key == key + '_max') {
+				    dataset.data = resp['data'][key][sensor_type + '_max'];
+				}
+			    });
+			}
+			window.charts[sensor_type].update();
 		}
-		if (dataset.key == key + '_min') {
-		    dataset.data = resp['data'][key]['temperatures_min'];
-		}
-		if (dataset.key == key + '_max') {
-		    dataset.data = resp['data'][key]['temperatures_max'];
-		}
-	    });
-	    window.myHumChart.data.datasets.forEach((dataset) => {
-		if (dataset.key == key) {
-		    dataset.data = replaceAllButLast(dataset.data, resp['data'][key]['humidities']);
-		}
-		if (dataset.key == key + '_min') {
-		    dataset.data = resp['data'][key]['humidities_min'];
-		}
-		if (dataset.key == key + '_max') {
-		    dataset.data = resp['data'][key]['humidities_max'];
-		}
-	    });
-	}
-	window.myTempChart.update();
-	window.myHumChart.update();
 
-	// Update graph every minute
-        graphUpdateTimeout = setTimeout(function(){showGraph(range)}, 60*1000);
+		// Update graph every minute
+		graphUpdateTimeout = setTimeout(function(){showGraph(range)}, 60*1000);
 	});
 }
 if (window.location.hash) {
@@ -291,7 +208,7 @@ if (window.location.hash) {
 </script>
 <script>
 $(document).ready(function() { 
-setCurrentTemp();
+updateAll();
 $("ul.tabs").tabs({ onShow: function(tab) {
 	showGraph(tab.attr('id'));
 } });

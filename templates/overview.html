@@ -7,7 +7,7 @@
         <div class='col s12 m6 l4'>
         <p>
         {% if element['element_type'] == 'sensor' %}
-        <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
+          <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
         {% elif element['element_type'] == 'toggle' %}
           <span>{{ element['name'] }}</span>
 	  <div class="preloader-wrapper small active" id="{{element['id']}}_preloader" style="display: none">
@@ -48,7 +48,6 @@ function toggle(element) {
 
 function updateAll() {
     $.getJSON( "/data/now", function( resp ) {
-        var s = "";
         for (var sensor_id in resp['sensors'])
         {
             $("#sensor_" + sensor_id)[0].innerHTML = "" +
