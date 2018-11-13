@@ -30,6 +30,11 @@
 <canvas id="humChart" style="height: 200px"></canvas>
 </div>
 </li>
+<li class="collection-item">
+<div style="height: 200px;">
+<canvas id="toggleChart" style="height: 200px"></canvas>
+</div>
+</li>
 </ul>
 <script>
 function convertHex(hex, opacity){
@@ -143,6 +148,7 @@ sensors = {
 window.charts = {}
 window.charts['temperature'] = createChart($('#tempChart'), 'Temperature C', sensors);
 window.charts['humidity'] = createChart($('#humChart'), 'Humidity %', sensors);
+window.charts['toggle'] = createChart($('#toggleChart'), 'State 1/0', sensors);
 
 function updateAll () {
 	$.getJSON( "/data/now", function( resp ) {
@@ -181,6 +187,9 @@ function showGraph(range) {
 
 			for (var key in resp['data'])
 			{
+			    if (!(sensor_type in resp['data'][key]))
+			        continue;
+
 			    window.charts[sensor_type].data.datasets.forEach((dataset) => {
 				if (dataset.key == key) {
 				    dataset.data = replaceAllButLast(dataset.data, resp['data'][key][sensor_type]);

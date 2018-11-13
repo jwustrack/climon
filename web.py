@@ -48,7 +48,7 @@ def settoggle(toggle_id, state):
     squeue.put({
         'sensor_id': toggle_id,
         'timestamp': datetime.utcnow(),
-        'metric': database.Metrics.TOGGLE,
+        'metric': database.Metrics.toggle,
         'value': new_state
         })
     return json.dumps(new_state)
@@ -75,7 +75,7 @@ def gnowdata():
         hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.humidity))
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
     for toggle_id in conf.iter_ids('toggle'):
-        state = get_recent_value(get_db().get_latest(toggle_id, database.Metrics.TOGGLE))
+        state = get_recent_value(get_db().get_latest(toggle_id, database.Metrics.toggle))
         sensor_data['toggles'][toggle_id] = state
     return json.dumps(sensor_data)
 
@@ -87,7 +87,7 @@ def ganydata(view_range):
     sensor_data = {}
     labels = []
 
-    for sensor_id in conf.iter_ids('sensor'):
+    for sensor_id in list(conf.iter_ids('sensor')) + list(conf.iter_ids('toggle')):
         sensor_data[sensor_id] = defaultdict(lambda: [])
         logging.debug("Getting stats for %s", sensor_id)
         stats = get_db().get_stats(sensor_id, from_date, to_date, view_range)
@@ -147,6 +147,7 @@ def sethum(sensor_id, humidity):
 def stats():
     timestamp = datetime.now()
     sensor_confs = dict(conf.iter_sections('sensor'))
+    sensor_confs.update(dict(conf.iter_sections('toggle')))
     return render_template('stats.html',
                            date=timestamp.strftime('%Y%m%d'),
                            sensor_confs=sensor_confs)

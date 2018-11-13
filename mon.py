@@ -22,7 +22,7 @@ def log_toggle_state(db, toggle_id, toggle, timestamp):
     try:
         state = toggle.get()
         logging.debug('Toggle %s returned %s', toggle_id, state)
-        db.set(toggle_id, timestamp, database.Metrics.TOGGLE, state)
+        db.set(toggle_id, timestamp, database.Metrics.toggle, state)
     except Exception:
         logging.exception('Error getting state of toggle %s', toggle_id)
 
