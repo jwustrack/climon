@@ -56,14 +56,14 @@ class EspEasyToggle(object):
         value = '1' if state else '0'
         url = '%s/control?cmd=GPIO,%s,%s' % (self.url, self.gpio, value)
         res = url_json_get(url)
-        if res is None:
+        if res is None or res['state'] not in (0, 1):
             raise ValueError()
         return res['state'] == 1
 
     def get(self):
         url = '%s/control?cmd=Status,GPIO,%s' % (self.url, self.gpio)
         res = url_json_get(url)
-        if res is None:
+        if res is None or res['state'] not in (0, 1):
             raise ValueError()
         return res['state'] == 1
 

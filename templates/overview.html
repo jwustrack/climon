@@ -28,6 +28,11 @@
                 <span class="lever"></span>
               </label>
             </div>
+            <div id="{{element['id']}}_reset" style="display: none">
+              <label>
+		??? <a href='#' onclick="reset('{{element['id']}}')">reset</a>
+              </label>
+            </div>
         {% endif %}
         </p>
         </div>
@@ -46,6 +51,15 @@ function toggle(element) {
             });
 }
 
+function reset(element_id) {
+    $.getJSON( "/data/toggle/" + element_id + "/0",
+            function( resp ) {
+		$("#" + element_id + "_reset").hide();
+		$("#" + element_id + "_switch").show();
+		$("#" + element_id).checked = resp;
+            });
+}
+
 function updateAll() {
     $.getJSON( "/data/now", function( resp ) {
         for (var sensor_id in resp['sensors'])
@@ -56,9 +70,16 @@ function updateAll() {
         }
         for (var toggle_id in resp['toggles'])
         {
-            $("#" + toggle_id + "_preloader").hide();
-            $("#" + toggle_id + "_switch").show();
-            $("#" + toggle_id)[0].checked = resp['toggles'][toggle_id];
+            if (resp['toggles'][toggle_id] == 0 || resp['toggles'][toggle_id] == 1) {
+		    $("#" + toggle_id + "_preloader").hide();
+		    $("#" + toggle_id + "_reset").hide();
+		    $("#" + toggle_id + "_switch").show();
+		    $("#" + toggle_id)[0].checked = resp['toggles'][toggle_id];
+            } else {
+		    $("#" + toggle_id + "_preloader").hide();
+		    $("#" + toggle_id + "_switch").hide();
+		    $("#" + toggle_id + "_reset").show();
+            }
         }
         setTimeout(updateAll, 5*1000);
     });
