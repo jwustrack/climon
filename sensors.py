@@ -29,7 +29,7 @@ def dht11(source):
     hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, int(source))
     if hum < 0 or hum > 100:
         raise ValueError('humidity out of bounds')
-    return hum, temp
+    return dict(temperature=temp, humidity=hum)
 
 @sensor
 def dht22(source):
@@ -37,17 +37,18 @@ def dht22(source):
     hum, temp = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, int(source))
     if hum < 0 or hum > 100:
         raise ValueError('humidity out of bounds')
-    return hum, temp
+    return dict(temperature=temp, humidity=hum)
 
 @sensor
 def climon(source):
     from urllib import request
-    return map(float, request.urlopen(source).read().split())
+    hum, temp = map(float, request.urlopen(source).read().split())
+    return dict(temperature=temp, humidity=hum)
 
 @sensor
 def rand(source):
     import random
-    return random.random() * 100, random.random() * 50 - 15
+    return dict(temperature=random.random() * 50 - 15, humidity=random.random() * 100)
 
 def sine(source):
     '''
@@ -71,9 +72,23 @@ def sine(source):
         from math import sin
         # Make y vary from -.5 to .5
         y = .25*(sin(x/60) + sin(x/60/24/100))
-        return round(40*(y+.3), 2), round(100*(y+.5), 2)
+        return dict(temperature=round(100*(y+.5), 2), humidity=round(40*(y+.3), 2))
     return sine_sensor
 
+@sensor
+def openweathermap(source):
+    import json
+    from urllib import request
+    resp = request.urlopen('http://api.openweathermap.org/data/2.5/weather?' + source).read()
+    data = json.loads(resp.decode('utf8'))
+    return dict(
+        temperature=data['main']['temp'] - 273.15,
+        humidity=data['main']['humidity'],
+        pressure=data['main']['pressure'],
+        wind=data['wind']['speed'],
+        )
+    
+    
 def empty(source):
     class EmptySensor(object):
         pass
@@ -86,5 +101,6 @@ SENSORS = {
     'CLIMON': climon,
     'RANDOM': rand,
     'SINE': sine,
-    'WEB': empty
+    'WEB': empty,
+    'OPENWEATHERMAP': openweathermap,
 }

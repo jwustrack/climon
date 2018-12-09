@@ -32,10 +32,10 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
 
     try:
         logging.debug('Reading sensor %s', sensor_id)
-        hum, temp = sensor()
-        logging.debug('Sensor %s returned temp: %f hum %f', sensor_id, temp, hum)
-        db.set(sensor_id, timestamp, database.Metrics.temperature, temp)
-        db.set(sensor_id, timestamp, database.Metrics.humidity, hum)
+        data = sensor()
+        logging.debug('Sensor %s returned %r', sensor_id, data)
+        db.set(sensor_id, timestamp, database.Metrics.temperature, data['temperature'])
+        db.set(sensor_id, timestamp, database.Metrics.humidity, data['humidity'])
     except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 

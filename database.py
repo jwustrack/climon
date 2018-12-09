@@ -75,6 +75,9 @@ class Metrics(Enum):
     temperature = 0
     humidity = 1
     toggle = 2
+    pressure = 3
+    wind = 4
+    gust = 5
 
 class DB(object):
     'Base Database class'
