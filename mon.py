@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from time import sleep
 import logging
 
-from conf import Conf
+import conf_yaml
 import database
 import queue
 
@@ -39,15 +39,21 @@ def log_sensor_data(db, sensor_id, sensor, timestamp):
     except Exception:
         logging.exception('Error while reading sensor %s', sensor_id)
 
+def control(rdb):
+    if rdb.get_latest('bathtemp', database.Metrics.temperature) < 20 \
+            and datetime.time(5,0) > datetime.datetime.utcnow().time() > datetime.time(7, 0) \
+            and not rdb.get_latest('bathheat', database.Metrics.toggle):
+        pass
+
 def run(conf_fname, sensor_queue, debug=False):
     logging.basicConfig(filename='climon.log',
                         format='%(asctime)s %(levelname)s MON[%(process)d/%(thread)d] %(message)s',
                         level=logging.DEBUG)
 
-    conf = Conf(conf_fname)
+    conf = conf_yaml.load(conf_fname)
     
-    if 'monitor-interval' in conf.raw['common']:
-        db = database.WriteDB(conf.raw['common']['database'])
+    if 'monitor-interval' in conf:
+        db = database.WriteDB(conf['database'])
 
         missing_stats = set()
 
@@ -66,24 +72,24 @@ def run(conf_fname, sensor_queue, debug=False):
                     logging.debug('empty sensor_queue')
                     break
 
-            if interval_over(monitor_timestamp, int(conf.raw['common']['monitor-interval'])):
+            if interval_over(monitor_timestamp, conf['monitor-interval']):
                 monitor_timestamp = datetime.utcnow()
-                for sensor_id, sensor in conf.iter_elements('sensor'):
+                for sensor_id, sensor in conf['sensors'].items():
                     log_sensor_data(db, sensor_id, sensor, monitor_timestamp)
                     missing_stats.add((sensor_id, monitor_timestamp))
     
-                for toggle_id, toggle in conf.iter_elements('toggle'):
+                for toggle_id, toggle in conf['toggles'].items():
                     log_toggle_state(db, toggle_id, toggle, monitor_timestamp)
                     missing_stats.add((toggle_id, monitor_timestamp))
 
-            if interval_over(stats_timestamp, int(conf.raw['common']['stats-interval'])):
+            if interval_over(stats_timestamp, conf['stats-interval']):
                 stats_timestamp = datetime.utcnow()
                 for id, timestamp in missing_stats:
                     db.update_stats(id, timestamp)
                 missing_stats = set()
 
             logging.debug('Starting to sleep')
-            sleep_since(queue_timestamp, int(conf.raw['common']['queue-interval']))
+            sleep_since(queue_timestamp, conf['queue-interval'])
             queue_timestamp = datetime.utcnow()
 
         db.close()

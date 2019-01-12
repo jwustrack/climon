@@ -1,0 +1,67 @@
+database: climon.db
+queue-interval: 1
+monitor-interval: 60
+stats-interval: 300
+port: 8765
+
+sensors:
+    living-room-22:
+        name:
+        type: DHT22
+        source: 5
+        color: #2244cc
+        group: livingroom
+
+    bathtemp:
+        name: 
+        type: web
+        source: 
+        color: #22cc66
+        group: bathroom
+
+    grasse:
+        name: weather
+        type: openweathermap
+        source: q:grasse,fr&APPID:d12875d202812ccc4b6d46075d65282f
+        color: #cc4422
+        group: outside
+
+toggles:
+    bathfan:
+        name: fan
+        color: #22cccc
+        type: espeasy
+        source: http://192.168.1.124 18
+        invert: true
+        group: bathroom
+        control:
+            '*': off
+            '8:00 < t < 21:00':
+                '*': off
+                'bathtemp.humidity > 80': on
+
+    bathheat:
+        name: heating
+        color: #cccc66
+        type: espeasy
+        source: http://192.168.1.124 16
+        invert: true
+        group: bathroom
+        control:
+            '*': off
+            '5:00 < t < 7:00':
+                '*': off
+                'bathtemp.temperature < 20': on
+
+groups:
+    livingroom:
+        name: Living room
+        color: #cccc66
+
+    bathroom:
+        name: Bathroom
+        color: #22cccc
+
+    outside:
+        name: Outside
+        color: #66ff66

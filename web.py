@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from datetime import datetime, timedelta
 import time
 from collections import defaultdict
@@ -6,25 +8,24 @@ import logging
 import threading
 
 import database
-from conf import Conf, ParsedConf
+import conf_yaml
 
 import flask
 from flask import render_template
 
 app = flask.Flask(__name__)
 conf = None
-pconf = None
 
 def get_db():
     l = threading.local()
     db = getattr(l, 'db', None)
     if db is None:
-        l.db = database.ReadDB(conf.raw['common']['database'])
+        l.db = database.ReadDB(conf['database'])
     return l.db
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    temp, hum = conf.get_element('sensor', sensor_id)()
+    temp, hum = conf['sensors']['sensor_id']['func']()
     return '%f %f' % (temp, hum)
 
 RANGE_DATES = dict(
@@ -43,7 +44,7 @@ def utc2local(utc):
 
 @app.route('/data/toggle/<toggle_id>/<state>')
 def settoggle(toggle_id, state):
-    toggle = conf.get_element('toggle', toggle_id)
+    toggle = conf['toggles']['toggle_id']['func']
     new_state = toggle.set(json.loads(state))
     squeue.put({
         'sensor_id': toggle_id,
@@ -63,13 +64,16 @@ def get_recent_value(time_value):
 @app.route('/data/now')
 def gnowdata():
     sensor_data = dict(now=datetime.now().strftime('%Y%m%dT%H%M%S'), sensors={}, toggles={})
-    for sensor_id in conf.iter_ids('sensor'):
+
+    for sensor_id in conf['sensors'].keys():
         temp = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.temperature))
         hum = get_recent_value(get_db().get_latest(sensor_id, database.Metrics.humidity))
         sensor_data['sensors'][sensor_id] = dict(temperature=temp, humidity=hum)
-    for toggle_id in conf.iter_ids('toggle'):
+
+    for toggle_id in conf['toggles'].keys():
         state = get_recent_value(get_db().get_latest(toggle_id, database.Metrics.toggle))
         sensor_data['toggles'][toggle_id] = state
+
     return json.dumps(sensor_data)
 
 @app.route('/data/<view_range>')
@@ -80,7 +84,7 @@ def ganydata(view_range):
     sensor_data = {}
     labels = []
 
-    for sensor_id in list(conf.iter_ids('sensor')) + list(conf.iter_ids('toggle')):
+    for sensor_id, _ in conf_yaml.iter_elements(conf):
         sensor_data[sensor_id] = defaultdict(lambda: [])
         logging.debug("Getting stats for %s", sensor_id)
         stats = get_db().get_stats(sensor_id, from_date, to_date, view_range)
@@ -139,18 +143,17 @@ def sethum(sensor_id, humidity):
 @app.route('/')
 def stats():
     timestamp = datetime.now()
-    sensor_confs = dict(conf.iter_sections('sensor'))
-    sensor_confs.update(dict(conf.iter_sections('toggle')))
+    elements = dict(conf_yaml.iter_elements(conf))
     return render_template('stats.html',
                            date=timestamp.strftime('%Y%m%d'),
-                           sensor_confs=sensor_confs)
+                           sensor_confs=elements)
 
 @app.route('/overview')
 def overview():
     timestamp = datetime.now()
     return render_template('overview.html',
                            date=timestamp.strftime('%Y%m%d'),
-                           conf=pconf)
+                           conf=conf)
 
 @app.route('/small')
 def small_overview():
@@ -162,18 +165,21 @@ def small_overview():
                            sensor_confs=sensor_confs, toggle_confs=toggle_confs)
 
 def run(conf_fname, sensor_queue, debug=False):
-    global conf, pconf, squeue
+    global conf, squeue
 
     squeue = sensor_queue
 
-    logging.basicConfig(filename='climon.log',
-                        format='%(asctime)s %(levelname)s WEB[%(process)d/%(thread)d] %(message)s',
-                        level=logging.DEBUG)
+    #logging.basicConfig(filename='climon.log',
+    #                    format='%(asctime)s %(levelname)s WEB[%(process)d/%(thread)d] %(message)s',
+    #                    level=logging.DEBUG)
 
     logging.info('Reading conf')
-    conf = Conf(conf_fname)
-    pconf = ParsedConf(conf_fname)
-    print(pconf.groups)
+    conf = conf_yaml.load(conf_fname)
     logging.info('Reading conf done')
 
-    app.run(debug=debug, host='0.0.0.0', threaded=not debug, port=int(conf.raw['common']['port']))
+    app.run(debug=False, host='0.0.0.0', threaded=True, port=conf['port'])
+
+if __name__ == '__main__':
+    from multiprocessing import Queue
+    sensor_queue = Queue()
+    run('climon.yml', sensor_queue, True)

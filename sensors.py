@@ -57,13 +57,13 @@ def sine(source):
 
     >>> s = sine('')
     >>> s()
-    (12.17, 50.42)
+    {'humidity': 12.17, 'temperature': 50.42}
     >>> for _ in range(9): _ = s()
     >>> s()
-    (13.82, 54.56)
+    {'humidity': 13.82, 'temperature': 54.56}
     >>> for _ in range(49): _ = s()
     >>> s()
-    (20.51, 71.27)
+    {'humidity': 20.51, 'temperature': 71.27}
     '''
     x = hash(source)
     def sine_sensor():
