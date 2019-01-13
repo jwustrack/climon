@@ -22,7 +22,7 @@ sensors:
     grasse:
         name: weather
         type: openweathermap
-        source: q:grasse,fr&APPID:d12875d202812ccc4b6d46075d65282f
+        source: q=grasse,fr&APPID=d12875d202812ccc4b6d46075d65282f
         color: #cc4422
         group: outside
 

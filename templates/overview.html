@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-{% for group, elements in conf.groups %}
+{% for key, group in conf.groups.items() %}
     <h5 style='color:{{group['color']}}'>{{ group['name'] }}</h5>
     <div class='row'>
-    {% for element_id, element in elements %}
+    {% for element_id, element in group['elements'].items() %}
         <div class='col s12 m6 l4'>
         <p>
         {% if element['element_type'] == 'sensor' %}
-          <label>{{ element['name'] }}</label><span id="sensor_{{element['id']}}">...</span>
+          <label>{{ element['name'] }}</label><span id="sensor_{{element_id}}">...</span>
         {% elif element['element_type'] == 'toggle' %}
           <span>{{ element['name'] }}</span>
-	  <div class="preloader-wrapper small active" id="{{element['id']}}_preloader" style="display: none">
+	  <div class="preloader-wrapper small active" id="{{element_id}}_preloader" style="display: none">
 	    <div class="spinner-layer spinner-green-only">
 	      <div class="circle-clipper left">
 		<div class="circle"></div>
@@ -21,16 +21,16 @@
 	      </div>
 	    </div>
 	  </div>
-            <div class="switch" id="{{element['id']}}_switch" style="display: none">
+            <div class="switch" id="{{element_id}}_switch" style="display: none">
               <label>
                   <!--<span>{{ element['name'] }}</span>-->
-                <input type="checkbox" id="{{element['id']}}" onchange="toggle(this)">
+                <input type="checkbox" id="{{element_id}}" onchange="toggle(this)">
                 <span class="lever"></span>
               </label>
             </div>
-            <div id="{{element['id']}}_reset" style="display: none">
+            <div id="{{element_id}}_reset" style="display: none">
               <label>
-		??? <a href='#' onclick="reset('{{element['id']}}')">reset</a>
+		??? <a href='#' onclick="reset('{{element_id}}')">reset</a>
               </label>
             </div>
         {% endif %}

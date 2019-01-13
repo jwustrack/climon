@@ -20,19 +20,19 @@ def sleep_since(since, seconds):
 
 def log_toggle_state(db, toggle_id, toggle, timestamp):
     try:
-        state = toggle.get()
+        state = toggle['object'].get()
         logging.debug('Toggle %s returned %s', toggle_id, state)
         db.set(toggle_id, timestamp, database.Metrics.toggle, state)
     except Exception:
         logging.exception('Error getting state of toggle %s', toggle_id)
 
 def log_sensor_data(db, sensor_id, sensor, timestamp):
-    if not callable(sensor):
+    if not callable(sensor['object']):
         return
 
     try:
         logging.debug('Reading sensor %s', sensor_id)
-        data = sensor()
+        data = sensor['object']()
         logging.debug('Sensor %s returned %r', sensor_id, data)
         db.set(sensor_id, timestamp, database.Metrics.temperature, data['temperature'])
         db.set(sensor_id, timestamp, database.Metrics.humidity, data['humidity'])

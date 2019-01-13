@@ -15,11 +15,13 @@ def load(fname):
     conf = yaml.load(open(fname, 'r'))
 
     for sensor_id, sensor in conf['sensors'].items():
-        sensor['func'] = SENSORS[sensor['type'].upper()](sensor['source'])
+        sensor['object'] = SENSORS[sensor['type'].upper()](sensor['source'])
         sensor['element_type'] = 'sensor'
 
     for toggle_id, toggle in conf['toggles'].items():
-        toggle['func'] = TOGGLES[toggle['type'].upper()](toggle['source'])
+        toggle['object'] = TOGGLES[toggle['type'].upper()](toggle['source'])
+        if toggle.get('invert', None):
+            toggle['object'] = InvertedToggle(toggle['object'])
         toggle['element_type'] = 'toggle'
 
     for group_id, group in conf['groups'].items():

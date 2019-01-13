@@ -25,7 +25,7 @@ def get_db():
 
 @app.route('/sensor/<sensor_id>')
 def climon(sensor_id):
-    temp, hum = conf['sensors']['sensor_id']['func']()
+    temp, hum = conf['sensors']['sensor_id']['object']()
     return '%f %f' % (temp, hum)
 
 RANGE_DATES = dict(
@@ -44,7 +44,7 @@ def utc2local(utc):
 
 @app.route('/data/toggle/<toggle_id>/<state>')
 def settoggle(toggle_id, state):
-    toggle = conf['toggles']['toggle_id']['func']
+    toggle = conf['toggles'][toggle_id]['object']
     new_state = toggle.set(json.loads(state))
     squeue.put({
         'sensor_id': toggle_id,
