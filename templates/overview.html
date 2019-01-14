@@ -7,7 +7,7 @@
         <div class='col s12 m6 l4'>
         <p>
         {% if element['element_type'] == 'sensor' %}
-          <label>{{ element['name'] }}</label><span id="sensor_{{element_id}}">...</span>
+          {% if element['name'] %}<label>{{ element['name'] }}</label>{% endif %}<span id="sensor_{{element_id}}">...</span>
         {% elif element['element_type'] == 'toggle' %}
           <span>{{ element['name'] }}</span>
 	  <div class="preloader-wrapper small active" id="{{element_id}}_preloader" style="display: none">
