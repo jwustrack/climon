@@ -1,0 +1,2 @@
+RPi.GPIO
+adafruit_python_dht
