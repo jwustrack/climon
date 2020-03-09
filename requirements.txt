@@ -1,2 +1,2 @@
 RPi.GPIO
-adafruit_python_dht
+Adafruit_DHT

@@ -56,14 +56,14 @@ def sine(source):
     at day and year scale, if called once a minute.
 
     >>> s = sine('')
-    >>> s()
-    (12.17, 50.42)
+    >>> s()['humidity'], s()['temperature']
+    (12.17, 50.83)
     >>> for _ in range(9): _ = s()
-    >>> s()
-    (13.82, 54.56)
+    >>> s()['humidity'], s()['temperature']
+    (13.99, 55.38)
     >>> for _ in range(49): _ = s()
-    >>> s()
-    (20.51, 71.27)
+    >>> s()['humidity'], s()['temperature']
+    (20.68, 71.9)
     '''
     x = hash(source)
     def sine_sensor():
